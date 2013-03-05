@@ -28,7 +28,7 @@ set_global_assignment -name DEVICE EP3C25E144C8
 set_global_assignment -name TOP_LEVEL_ENTITY minimig_mist_top
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 7.2
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "22:27:29  OCTOBER 30, 2007"
-set_global_assignment -name LAST_QUARTUS_VERSION 12.1
+set_global_assignment -name LAST_QUARTUS_VERSION "10.1 SP1"
 set_global_assignment -name USE_GENERATED_PHYSICAL_CONSTRAINTS OFF -section_id eda_palace
 set_global_assignment -name DEVICE_FILTER_PIN_COUNT 144
 set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "NO HEAT SINK WITH STILL AIR"
@@ -174,17 +174,18 @@ set_global_assignment -name OUTPUT_IO_TIMING_NEAR_END_VMEAS "HALF VCCIO" -rise
 set_global_assignment -name OUTPUT_IO_TIMING_NEAR_END_VMEAS "HALF VCCIO" -fall
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -rise
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -fall
-set_global_assignment -name VHDL_FILE ../../rtl/de1/sdram.vhd
+set_global_assignment -name VHDL_FILE ../../rtl/sdram/sdram.vhd
 set_global_assignment -name VHDL_FILE ../../rtl/tg68k/TG68KdotC_Kernel.vhd
 set_global_assignment -name VHDL_FILE ../../rtl/tg68k/TG68K_Pack.vhd
 set_global_assignment -name VHDL_FILE ../../rtl/tg68k/TG68K_ALU.vhd
 set_global_assignment -name VHDL_FILE ../../rtl/tg68k/TG68K.vhd
 set_global_assignment -name VERILOG_FILE ../../rtl/soc/minimig_mist_top.v
-set_global_assignment -name VERILOG_FILE ../../rtl/soc/user_io.v
-set_global_assignment -name VERILOG_FILE ../../rtl/de1/amigaclk.v
-set_global_assignment -name VERILOG_FILE ../../lib/altera/i_sync.v
+set_global_assignment -name VERILOG_FILE ../../rtl/mist/user_io.v
+set_global_assignment -name VERILOG_FILE ../../rtl/mist/amigaclk.v
+set_global_assignment -name VERILOG_FILE ../../rtl/clock/amiga_clk.v
+set_global_assignment -name VERILOG_FILE ../../rtl/clock/amiga_clk_altera.v
+set_global_assignment -name VERILOG_FILE ../../rtl/io/i_sync.v
 set_global_assignment -name VERILOG_FILE ../../rtl/sdram/sdram_ctrl.v
-set_global_assignment -name VERILOG_FILE ../../lib/altera/srl16e.v
 set_global_assignment -name VERILOG_FILE ../../rtl/minimig/Userio.v
 set_global_assignment -name VERILOG_FILE ../../rtl/minimig/Sprites.v
 set_global_assignment -name VERILOG_FILE ../../rtl/minimig/Paula.v
@@ -204,7 +205,6 @@ set_global_assignment -name VERILOG_FILE ../../rtl/minimig/Audio.v
 set_global_assignment -name VERILOG_FILE ../../rtl/minimig/Amber.v
 set_global_assignment -name VERILOG_FILE ../../rtl/minimig/Agnus.v
 set_global_assignment -name VERILOG_FILE ../../rtl/minimig/ActionReplay3.v
-set_global_assignment -name QIP_FILE amiga_boot.qip
 set_global_assignment -name VERILOG_FILE ../../fw/amiga_boot/bin/amiga_boot.v
 set_global_assignment -name SIGNALTAP_FILE stp1.stp
 set_instance_assignment -name GLOBAL_SIGNAL "GLOBAL CLOCK" -to "amigaclk:amigaclk|altpll:altpll_component|_clk0"
@@ -345,5 +345,7 @@ set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_B[3]
 set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_B[2]
 set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_B[1]
 set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_B[0]
+
+
 
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
