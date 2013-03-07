@@ -63,7 +63,11 @@ wire           clk_28;
 wire           clk_sdram;
 wire           pll_locked;
 wire           clk_7;
-wire           clk_50;
+wire           clk7_en;
+wire           c1;
+wire           c3;
+wire           cck;
+wire [ 10-1:0] eclk;
 
 // reset
 wire           pll_rst;
