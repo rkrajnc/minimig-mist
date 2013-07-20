@@ -524,10 +524,13 @@ assign osd_blank = osdframe;
 //dual ported osd video buffer
 //video buffer is 1024*8
 //this buffer should be a single blockram
-always @(posedge clk)//input part
+reg [7:0] osdbuf_out;
+always @(posedge clk) begin//input part
 	if (wren)
 		osdbuf[wraddr[10:0]] <= wrdat[7:0];
-		
+	osdbuf_out <= osdbuf[wraddr[10:0]];
+end
+
 always @(posedge clk28m)//output part
 	bufout[7:0] <= osdbuf[{vpos[5:3],horbeam[8]^horbeam[7],~horbeam[7],horbeam[6:1]}];
 
@@ -540,6 +543,7 @@ reg   wrcmd;    // spi write command
 wire  vld;
 reg   vld_d;
 wire  spi_invalidate;
+wire [7:0] rddat;
 
 //instantiate spi interface
 spi8 spi0
@@ -549,8 +553,8 @@ spi8 spi0
 	.sdi(sdi),
 	.sdo(sdo),
 	.sck(sck),
-	.in(osd_ctrl),
-	.out(wrdat[7:0]),
+	.in(rddat),
+	.out(wrdat),
 	.rx(rx),
 	.cmd(cmd),
   .vld(vld)
@@ -743,7 +747,7 @@ assign wren = wr_en_r && rx && !cmd;
 
 // address counter and buffer write control (write line <NNN> command)
 always @ (posedge clk) begin
-  if (rx && !cmd && spi_osd_buffer_sel && (dat_cnt == 3))
+  if (rx && !cmd && (spi_osd_buffer_sel || spi_mem_read_sel) && (dat_cnt == 3))
     wraddr[10:0] <= {wrdat[2:0],8'b0000_0000};
   else if (rx)	//increment for every data byte that comes in
     wraddr[10:0] <= wraddr[10:0] + 11'd1;
@@ -756,6 +760,14 @@ always @ (posedge clk) begin
   else if (rx && !cmd && spi_osd_buffer_sel && (dat_cnt == 3) && wrdat[4])
     highlight <= #1 wrdat[3:0];
 end
+
+// register read
+wire [7:0] rtl_version;
+assign rtl_version = 8'h32;
+
+assign rddat =  (spi_version_sel) ? rtl_version  :
+                (spi_mem_read_sel) ? osdbuf_out : osd_ctrl;
+
 
 /*
 always @(posedge clk)
