@@ -9,9 +9,7 @@
 ../../../../rtl/minimig/Beamcounter.v
 ../../../../rtl/minimig/Bitplanes.v
 ../../../../rtl/minimig/Blitter.v
-../../../../rtl/minimig/BootRom.v
 ../../../../rtl/minimig/CIA8520.v
-../../../../rtl/minimig/Clock.v
 ../../../../rtl/minimig/Copper.v
 ../../../../rtl/minimig/Denise.v
 ../../../../rtl/minimig/Floppy.v
