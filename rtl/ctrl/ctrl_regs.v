@@ -30,6 +30,7 @@ module ctrl_regs #(
   input  wire [  4-1:0] ctrl_cfg,
   output reg  [  4-1:0] ctrl_status, 
   output wire           uart_txd,
+  //input  wire           uart_rxd,
   output reg  [  4-1:0] spi_cs_n,
   output wire           spi_clk,
   output wire           spi_do,
@@ -64,6 +65,9 @@ localparam RAW          = 3;
 
 // UART TxD counter value for 115200 @ 50MHz system clock
 localparam TXD_CNT      = 9'd434;
+
+// UART RxD counter value for 115200 @ 50MHz with 16x oversampling
+localparam RXD_CNT      = 5'd27;
 
 // timer precounter value for 1ms @ 50MHz system clock
 localparam TIMER_CNT    = 16'd50_000;
@@ -177,6 +181,63 @@ assign tx_ready = (~|tx_counter) && (~|tx_timer);
 
 // UART TXD
 assign uart_txd = tx_reg[0];
+
+
+
+////////////////////////////////////////
+// UART receive                       //
+////////////////////////////////////////
+
+reg  [  2-1:0] rxd_sync = 2'b11;
+reg            rxd_bit = 1'b1;
+reg  [  5-1:0] rx_sample_cnt = RXD_CNT;
+reg  [  4-1:0] rx_oversample_cnt = 4'b1111;
+wire           rx_sample;
+reg  [  4-1:0] rx_bit_cnt = 4'd0;
+reg  [ 10-1:0] rx_recv = 10'd0;
+reg  [  8-1:0] rx_reg;
+wire           rx_ready;
+
+// sync input
+always @ (posedge clk) rxd_sync <= #1 {rxd_sync[0], uart_rxd};
+
+// detect start condition
+always @ (posedge clk) rxd_bit <= #1 rxd_sync[1];
+assign rx_start = !rxd_bit && rxd_sync[1] && ~|rx_bit_cnt;
+
+// sampling counter
+always @ (posedge clk) begin
+  if (rx_start || ~|rx_sample_cnt) rx_sample_cnt <= #1 RXD_CNT;
+  else rx_sample_cnt <= rx_sample_cnt -1;
+end
+
+// oversampling counter
+always @ (posedge clk) begin
+  if (rx_start) rx_oversample_cnt <= #1 4'b1111;
+  else if (~|rx_sample_cnt) rx_oversample_cnt <= #1 rx_oversample_cnt - 1;
+end
+
+assign rx_sample = (rx_oversample_cnt == 4'b1000);
+
+// bit counter
+always @ (posedge clk) begin
+  if (rx_start) rx_bit_cnt <= #1 4'd10;
+  else if (rx_sample && |rx_bit_cnt) rx_bit_cnt <= #1 rx_bit_cnt - 1;
+end
+
+// RX receive register
+always @ (posedge clk) begin
+  if (rx_sample) rx_recv <= #1 {rxd_bit, rx_recv[9:1];
+end
+
+// RX data register
+always @ (posedge clk) begin
+  if (~|rx_bit_cnt && rx_reg[0]) rx_reg <= #1 rx_recv[8:1];
+end
+
+// TODO this is one cycle too late to be valid for rx_reg, but it will function for QMEM
+// either register this signal or jsut use rx_recv for reading
+assign rx_ready = ~|rx_bit_cnt && rx_reg[0];
 
 
 
