@@ -132,6 +132,7 @@ module ctrl_top (
   input  wire [  8-1:0] fl_dat_r,
   // UART
   output wire           uart_txd,
+  input  wire           uart_rxd,
   // SPI
   output wire [  4-1:0] spi_cs_n,
   output wire           spi_clk,
@@ -466,6 +467,7 @@ ctrl_regs #(
   .ctrl_cfg   (ctrl_cfg   ),
   .ctrl_status (ctrl_status),
   .uart_txd   (uart_txd   ),
+  .uart_rxd   (uart_rxd   ),
   .spi_cs_n   (spi_cs_n   ),
   .spi_clk    (spi_clk    ),
   .spi_do     (spi_do     ),
