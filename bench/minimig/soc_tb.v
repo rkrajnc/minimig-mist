@@ -182,6 +182,78 @@ initial begin
   repeat (10) @ (posedge CLOCK_50);
   #1;
 
+  // disable ctrl CPU
+  force soc_top.ctrl_top.ctrl_cpu.dcpu_cs  = 1'b0;
+  force soc_top.ctrl_top.ctrl_cpu.icpu_cs  = 1'b0;
+  force soc_top.ctrl_top.ctrl_cpu.dcpu_ack = 1'b0;
+  force soc_top.ctrl_top.ctrl_cpu.icpu_ack = 1'b0;
+  // force reset TG68
+  force soc_top.tg68_rst = 1'b0;
+
+  // wait for reset
+  //while (!soc_top.ctrl_top.rst) @ (posedge soc_top.ctrl_top.clk); #1;
+  wait (!soc_top.ctrl_top.ctrl_regs.rst);
+
+  // write to OSD SPI slave
+  // enable OSD (SPI chip select)
+  ctrl_regs_cycle(32'h00800014, 1'b1, 4'hf, 32'h00000044);
+  // send write command
+  ctrl_regs_cycle(32'h00800018, 1'b1, 4'hf, 32'h0000001c);
+  // send address
+  ctrl_regs_cycle(32'h00800018, 1'b1, 4'hf, 32'h00000000);
+  ctrl_regs_cycle(32'h00800018, 1'b1, 4'hf, 32'h00000000);
+  ctrl_regs_cycle(32'h00800018, 1'b1, 4'hf, 32'h00000018);
+  ctrl_regs_cycle(32'h00800018, 1'b1, 4'hf, 32'h00000000);
+  // send data
+  ctrl_regs_cycle(32'h00800018, 1'b1, 4'hf, 32'h000000aa);
+  ctrl_regs_cycle(32'h00800018, 1'b1, 4'hf, 32'h000000bb);
+  ctrl_regs_cycle(32'h00800018, 1'b1, 4'hf, 32'h000000cc);
+  ctrl_regs_cycle(32'h00800018, 1'b1, 4'hf, 32'h000000dd);
+  ctrl_regs_cycle(32'h00800018, 1'b1, 4'hf, 32'h000000ee);
+  ctrl_regs_cycle(32'h00800018, 1'b1, 4'hf, 32'h000000ff);
+
+  repeat (200) @ (posedge soc_top.clk_7);
+
+  // disable OSD (SPI chip select)
+  ctrl_regs_cycle(32'h00800014, 1'b1, 4'hf, 32'h00000040);
+
+  repeat (100) @ (posedge soc_top.clk_7);
+
+/*
+  // try a TG68 cycle
+  force soc_top.tg68_adr = 24'h123456;
+  force soc_top.tg68_dat_out = 16'hbeef;
+  force soc_top.tg68_as = 1'b0;
+  force soc_top.tg68_uds = 1'b0;
+  force soc_top.tg68_lds = 1'b0;
+  force soc_top.tg68_rw = 1'b0;
+  @ (posedge soc_top.clk_7);
+  while (soc_top.tg68_dtack) @ (posedge soc_top.clk_7); #1;
+  @ (posedge soc_top.clk_7);
+  force soc_top.tg68_as = 1'b1;
+  @ (posedge soc_top.clk_7);
+  @ (posedge soc_top.clk_7);
+  force soc_top.tg68_adr = 24'h123456;
+  force soc_top.tg68_dat_out = 16'hdead;
+  force soc_top.tg68_as = 1'b0;
+  force soc_top.tg68_uds = 1'b1;
+  force soc_top.tg68_lds = 1'b1;
+  force soc_top.tg68_rw = 1'b1;
+  @ (posedge soc_top.clk_7);
+  while (soc_top.tg68_dtack) @ (posedge soc_top.clk_7); #1;
+  @ (posedge soc_top.clk_7);
+  force soc_top.tg68_as = 1'b1;
+  @ (posedge soc_top.clk_7);
+  @ (posedge soc_top.clk_7);
+  release soc_top.tg68_adr;
+  release soc_top.tg68_dat_out;
+  release soc_top.tg68_as;
+  release soc_top.tg68_uds;
+  release soc_top.tg68_lds;
+  release soc_top.tg68_rw;
+  repeat (10) @ (posedge soc_top.clk_7);
+*/
+
   // start monitor
   $display("BENCH : %t : starting vga monitor ...", $time);
   //vga_monitor.start;
@@ -195,8 +267,8 @@ initial begin
   //switches.toggle({1'b1, 1'b1, 1'b1, 5'b00000, 1'b0, 1'b0});
 
   // wait for three frames
-  $display("BENCH : %t : waiting for frames ...", $time);
-  wait (`VGA_MON_F_CNT == 7'd3);
+  //$display("BENCH : %t : waiting for frames ...", $time);
+  //wait (`VGA_MON_F_CNT == 7'd3);
   #100;
 
   // display result
@@ -206,6 +278,39 @@ initial begin
   $display("BENCH : done.");
   $finish;
 end
+
+
+
+////////////////////////////////////////
+// tasks                              //
+////////////////////////////////////////
+
+// force ctrl regs bus
+task ctrl_regs_cycle;
+input  [32-1:0] adr;
+input           we;
+input  [ 4-1:0] sel;
+input  [32-1:0] dat_w;
+output [32-1:0] dat_r;
+begin
+  @ (posedge soc_top.ctrl_top.clk); #1;
+  force soc_top.ctrl_top.ctrl_regs.adr   = adr;
+  force soc_top.ctrl_top.ctrl_regs.cs    = 1'b1;
+  force soc_top.ctrl_top.ctrl_regs.we    = we;
+  force soc_top.ctrl_top.ctrl_regs.sel   = sel;
+  force soc_top.ctrl_top.ctrl_regs.dat_w = dat_w;
+  @ (posedge soc_top.ctrl_top.clk); #1;
+  while (!soc_top.ctrl_top.ctrl_regs.ack) @ (posedge soc_top.ctrl_top.clk); #1;
+  release soc_top.ctrl_top.ctrl_regs.adr;
+  release soc_top.ctrl_top.ctrl_regs.cs;
+  release soc_top.ctrl_top.ctrl_regs.we;
+  release soc_top.ctrl_top.ctrl_regs.sel;
+  release soc_top.ctrl_top.ctrl_regs.dat_w;
+  @ (posedge soc_top.ctrl_top.clk); #1;
+  dat_r = soc_top.ctrl_top.ctrl_regs.dat_r;  
+end
+endtask
+
 
 
 
