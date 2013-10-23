@@ -192,6 +192,7 @@ assign uart_txd = tx_reg[0];
 
 reg  [  2-1:0] rxd_sync = 2'b11;
 reg            rxd_bit = 1'b1;
+wire           rx_start;
 reg  [  5-1:0] rx_sample_cnt = RXD_CNT;
 reg  [  4-1:0] rx_oversample_cnt = 4'b1111;
 wire           rx_sample;
