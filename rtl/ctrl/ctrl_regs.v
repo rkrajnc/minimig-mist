@@ -26,9 +26,11 @@ module ctrl_regs #(
   output wire           err,
   // registers
   output reg            sys_rst=0,
-  output reg            minimig_rst=0,
+  output reg            minimig_rst=1,
+  output reg            cpu_rst=1,
   input  wire [  4-1:0] ctrl_cfg,
   output reg  [  4-1:0] ctrl_status, 
+  input  wire [  4-1:0] sys_status,
   output wire           uart_txd,
   input  wire           uart_rxd,
   output reg  [  4-1:0] spi_cs_n,
@@ -44,24 +46,31 @@ module ctrl_regs #(
 ////////////////////////////////////////
 
 // system reset       = 0x800000
-localparam REG_RST        = 3'h0;
+localparam REG_RST        = 4'h0;
 // ctrl cfg & leds    = 0x800004
-localparam REG_CTRL       = 3'h1;
-// UART TxD           = 0x800008
-localparam REG_UART_TX    = 3'h2;
-// timer              = 0x80000c
-localparam REG_TIMER      = 3'h3;
-// SPI clock divider  = 0x800010
-localparam REG_SPI_DIV    = 3'h4;
-// SPI CS             = 0x800014
-localparam REG_SPI_CS     = 3'h5;
-// SPI_DAT            = 0x800018
-localparam REG_SPI_DAT    = 3'h6;
-// SPI_BLOCK          = 0x80001c
-localparam REG_SPI_BLOCK  = 3'h7;
+localparam REG_CTRL       = 4'h1;
+// SYS status         = 0x800008
+localparam REG_SYS_STAT   = 4'h2;
+// UART TxD           = 0x80000c
+localparam REG_UART_TX    = 4'h3;
+// UART RxD           = 0x800010
+localparam REG_UART_RX    = 4'h4;
+// UART status        = 0x800014
+localparam REG_UART_STAT  = 4'h5;
+// timer              = 0x800018
+localparam REG_TIMER      = 4'h6;
+// SPI clock divider  = 0x80001c
+localparam REG_SPI_DIV    = 4'h7;
+// SPI CS             = 0x800020
+localparam REG_SPI_CS     = 4'h8;
+// SPI_DAT            = 0x800024
+localparam REG_SPI_DAT    = 4'h9;
+// SPI_BLOCK          = 0x800028
+localparam REG_SPI_BLOCK  = 4'ha;
+// 
 
 // address width for register decoding
-localparam RAW          = 3; 
+localparam RAW          = 4; 
 
 // UART TxD counter value for 115200 @ 50MHz system clock (= 50000000 / 115200)
 localparam TXD_CNT      = 9'd434;
@@ -100,16 +109,19 @@ reg              sys_rst_en;
 
 // set initial system reset state
 initial sys_rst = 0;
-initial minimig_rst = 0;
+initial minimig_rst = 1;
+initial cpu_rst = 1;
 
 // system reset
 always @ (posedge clk, posedge rst) begin
   if (rst) begin
     sys_rst     <= #1 1'b0;
-    minimig_rst <= #1 1'b0;
+    minimig_rst <= #1 1'b1;
+    cpu_rst     <= #1 1'b1;
   end else if (sys_rst_en) begin
     sys_rst     <= #1 dat_w[0];
     minimig_rst <= #1 dat_w[1];
+    cpu_rst     <= #1 dat_w[2];
   end
 end
 
@@ -120,6 +132,7 @@ end
 ////////////////////////////////////////
 
 reg              ctrl_en;
+reg              sys_stat_en;
 
 always @ (posedge clk, posedge rst) begin
   if (rst)
@@ -202,6 +215,9 @@ reg  [ 10-1:0] rx_recv = 10'd0;
 reg  [  8-1:0] rx_reg = 8'd0;
 reg            rx_valid = 1'b0;
 wire           rx_ready;
+reg            rx_en;
+reg            rx_miss;
+reg            uart_stat_en;
 
 // sync input
 always @ (posedge clk) rxd_sync <= #1 {rxd_sync[0], uart_rxd};
@@ -249,16 +265,20 @@ end
 // RX valid
 // set when valid frame is received, reset when rx_reg is read
 always @ (posedge clk) begin
-  if (~|rx_bit_cnt && rx_recv[9] && rx_sample_d) rx_valid <= #1 1'b1;
-  else if (rx_valid) rx_valid <= #1 1'b0;
-  // TODO reset if start condition OR the character is read through QMEM     else if (rx_start | ...) rx_valid <= #1 1'b1;
+  if (~|rx_bit_cnt && rx_sample_d) rx_valid <= #1 rx_recv[9];
+  else if (rx_en) rx_valid <= #1 1'b0;
 end
 
 // RX ready
 // is the receiver ready
 assign rx_ready = ~|rx_bit_cnt;
 
-// TODO add miss (unread) detection, which is rx_valid && (~|rx_bit_cnt && rx_recv[9] && rx_sample_d)
+// RX missed char
+// set when there is a valid char in output reg but it wasn't read, reset by reading the UART status
+always @ (posedge clk) begin
+  if (rx_valid && (~|rx_bit_cnt && rx_recv[9] && rx_sample_d)) rx_miss <= #1 1'b1;
+  else if (uart_stat_en) rx_miss <= #1 1'b0;
+end
 
 
 
@@ -413,16 +433,22 @@ always @ (*) begin
   if (cs && we) begin
       sys_rst_en      = 1'b0;
       ctrl_en         = 1'b0;
+      sys_stat_en     = 1'b0;
       tx_en           = 1'b0;
+      rx_en           = 1'b0;
+      uart_stat_en    = 1'b0;
       timer_en        = 1'b0;
       spi_div_en      = 1'b0;
       spi_cs_n_en     = 1'b0;
       spi_dat_en      = 1'b0;
       spi_block_en    = 1'b0;
-    case(adr[4:2])
+    case(adr[RAW+2-1:2])
       REG_RST       : sys_rst_en      = 1'b1;
       REG_CTRL      : ctrl_en         = 1'b1;
+      REG_SYS_STAT  : sys_stat_en     = 1'b1;
       REG_UART_TX   : tx_en           = 1'b1;
+      REG_UART_RX   : rx_en           = 1'b1;
+      REG_UART_STAT : uart_stat_en    = 1'b1;
       REG_TIMER     : timer_en        = 1'b1;
       REG_SPI_DIV   : spi_div_en      = 1'b1;
       REG_SPI_CS    : spi_cs_n_en     = 1'b1;
@@ -431,7 +457,10 @@ always @ (*) begin
       default : begin
         sys_rst_en      = 1'b0;
         ctrl_en         = 1'b0;
+        sys_stat_en     = 1'b0;
         tx_en           = 1'b0;
+        rx_en           = 1'b0;
+        uart_stat_en    = 1'b0;
         timer_en        = 1'b0;
         spi_div_en      = 1'b0;
         spi_cs_n_en     = 1'b0;
@@ -442,7 +471,10 @@ always @ (*) begin
   end else begin
     sys_rst_en      = 1'b0;
     ctrl_en         = 1'b0;
+    sys_stat_en     = 1'b0;
     tx_en           = 1'b0;
+    rx_en           = 1'b0;
+    uart_stat_en    = 1'b0;
     timer_en        = 1'b0;
     spi_div_en      = 1'b0;
     spi_cs_n_en     = 1'b0;
@@ -458,8 +490,11 @@ end
 ////////////////////////////////////////
 
 always @ (*) begin
-  case(adr_r[4:2])
+  case(adr_r[RAW+2-1:2])
     REG_CTRL      : dat_r = {28'h0000000, ctrl_cfg};
+    REG_SYS_STAT  : dat_r = {28'h0000000, sys_status};
+    REG_UART_RX   : dat_r = {24'h000000, rx_reg};
+    REG_UART_STAT : dat_r = {28'h0000000, tx_ready, rx_ready, rx_miss, rx_valid};
     REG_TIMER     : dat_r = {16'h0000, timer}; 
     REG_SPI_DIV   : dat_r = {26'h0000000, spi_div_r};
     REG_SPI_DAT   : dat_r = {24'h000000, spi_dat_r};
@@ -475,7 +510,7 @@ end
 
 // ack
 always @ (*) begin
-  case(adr[4:2])
+  case(adr[RAW+2-1:2])
     REG_UART_TX   : ack = tx_ready;
     REG_SPI_DIV,
     REG_SPI_CS,

@@ -108,7 +108,16 @@ module userio
 	output	[2:0] ide_config,
   output  [1:0] cpu_config,
 	output	usrrst,					//user reset from osd module
-	output	bootrst					//user reset to bootloader
+	output	bootrst,					//user reset to bootloader
+  output cpurst,
+  // host
+  output wire           host_cs,
+  output wire [ 24-1:0] host_adr,
+  output wire           host_we,
+  output wire [  2-1:0] host_bs,
+  output wire [ 16-1:0] host_wdat,
+  input  wire [ 16-1:0] host_rdat,
+  input  wire           host_ack
 );
 
 //local signals	
@@ -367,7 +376,15 @@ osd	osd1
   .cpu_config(cpu_config),
   .autofire_config(autofire_config),
 	.usrrst(usrrst),
-	.bootrst(bootrst)
+	.bootrst(bootrst),
+  .cpurst(cpurst),
+  .host_cs      (host_cs          ),
+  .host_adr     (host_adr         ),
+  .host_we      (host_we          ),
+  .host_bs      (host_bs          ),
+  .host_wdat    (host_wdat        ),
+  .host_rdat    (host_rdat        ),
+  .host_ack     (host_ack         )
 );
 
 //--------------------------------------------------------------------------------------
@@ -408,8 +425,17 @@ module osd
 	output	reg	[2:0] ide_config = 0,		//enable hard disk support
   output  reg [1:0] cpu_config = 0,
   output  reg [1:0] autofire_config = 0,
-	output	usrrst,
-	output	bootrst
+	output	reg usrrst=1'b0,
+	output	reg bootrst=1'b0,
+  output reg cpurst=1'b0,
+  // host
+  output wire           host_cs,
+  output wire [ 24-1:0] host_adr,
+  output wire           host_we,
+  output wire [  2-1:0] host_bs,
+  output wire [ 16-1:0] host_wdat,
+  input  wire [ 16-1:0] host_rdat,
+  input  wire           host_ack
 );
 
 //local signals
@@ -713,7 +739,7 @@ end
 // write regs
 always @ (posedge clk) begin
   if (rx && !cmd) begin
-//    if (spi_reset_ctrl_sel)   begin if (dat_cnt == 0) {bootrst, usrrst} <= #1 wrdat[1:0]; end
+    if (spi_reset_ctrl_sel)   begin if (dat_cnt == 0) {cpurst, usrrst, bootrst} <= #1 wrdat[2:0]; end
 //    if (spi_clock_ctrl_sel)   begin if (dat_cnt == 0) end
     if (spi_osd_ctrl_sel)     begin if (dat_cnt == 0) {key_disable, osd_enable} <= #1 wrdat[1:0]; end
     if (spi_chip_cfg_sel)     begin if (dat_cnt == 0) t_chipset_config <= #1 wrdat[3:0]; end
@@ -730,9 +756,9 @@ always @ (posedge clk) begin
   end
 end
 
-// resets - temporary TODO!
-assign usrrst  = rx && !cmd && spi_reset_ctrl_sel && (dat_cnt == 0);
-assign bootrst = rx && !cmd && spi_reset_ctrl_sel && wrdat[0] && (dat_cnt == 0);
+//// resets - temporary TODO!
+//assign usrrst  = rx && !cmd && spi_reset_ctrl_sel && (dat_cnt == 0);
+//assign bootrst = rx && !cmd && spi_reset_ctrl_sel && wrdat[0] && (dat_cnt == 0);
 
 // OSD buffer write
 reg wr_en_r = 1'b0;
@@ -761,12 +787,66 @@ always @ (posedge clk) begin
     highlight <= #1 wrdat[3:0];
 end
 
+
+// memory write
+reg mem_toggle = 1'b0, mem_toggle_d = 1'b0;
+always @ (posedge clk) begin
+  if (!spi_mem_write_sel) begin
+    mem_toggle <= #1 1'b0;
+    mem_toggle_d <= #1 1'b0;
+  end else if (rx && !cmd && spi_mem_write_sel && (dat_cnt == 4)) begin
+    mem_toggle <= #1 ~mem_toggle;
+    mem_toggle_d <= #1 mem_toggle;
+  end
+end
+
+reg  [16-1:0] mem_page;
+reg  [16-1:0] mem_cnt;
+wire [32-1:0] mem_adr;
+always @ (posedge clk) begin
+  if (rx && !cmd && spi_mem_write_sel) begin
+    case (dat_cnt)
+      0 : mem_cnt [ 7:0] <= #1 wrdat[7:0];
+      1 : mem_cnt [15:8] <= #1 wrdat[7:0];
+      2 : mem_page[ 7:0] <= #1 wrdat[7:0];
+      3 : mem_page[15:8] <= #1 wrdat[7:0];
+      4 : if(mem_toggle) mem_cnt [15:0] <= #1 mem_cnt + 16'd2;
+    endcase
+  end
+end
+
+reg  [16-1:0] mem_cnt_d;
+always @ (posedge clk) mem_cnt_d <= #1 mem_cnt;
+
+assign mem_adr = {mem_page, mem_cnt_d}; // TODO check if mem_cnt_d is updated at the right time (not too soon!)
+
+reg  [ 8-1:0] mem_dat_r;
+always @ (posedge clk) begin
+  if (rx && !cmd && spi_mem_write_sel && !mem_toggle) mem_dat_r <= #1 wrdat[7:0];
+end
+
+reg rx_d;
+always @ (posedge clk) rx_d <= #1 rx;
+
+assign host_cs   = rx_d && mem_toggle_d;
+assign host_adr  = mem_adr[23:0];
+assign host_we   = mem_toggle_d;
+assign host_bs   = 2'b11;
+assign host_wdat = {wrdat, mem_dat_r};
+
+wire mem_as, mem_bhe, mem_ble, mem_rw;
+assign mem_as  = ~mem_toggle_d;
+assign mem_bhe = ~mem_toggle_d;
+assign mem_ble = ~mem_toggle_d;
+assign mem_rw  = ~mem_toggle_d;
+
+
 // register read
 wire [7:0] rtl_version;
 assign rtl_version = 8'h32;
 
-assign rddat =  (spi_version_sel) ? rtl_version  :
-                (spi_mem_read_sel) ? osdbuf_out : osd_ctrl;
+assign rddat =  (spi_version_sel)  ? rtl_version :
+                (spi_mem_read_sel) ? osdbuf_out  : osd_ctrl;
 
 
 /*

@@ -170,6 +170,8 @@ module Minimig1
 	output	_ram_we,			//sram write enable
 	output	_ram_oe,			//sram output enable
 	//system	pins
+  input rst_ext,      // reset from ctrl block
+  output rst_out,     // minimig reset status
 	input	clk28m,				//28.37516 MHz clock
 	input	clk,				//system clock (7.09379 MHz)
   input clk7_en,      // 7MHz clock enable
@@ -205,6 +207,14 @@ module Minimig1
 	input	sdi,				//SPI data input
 	inout	sdo,				//SPI data output
 	input	sck,				//SPI clock
+  // host
+  output wire           host_cs,
+  output wire [ 24-1:0] host_adr,
+  output wire           host_we,
+  output wire [  2-1:0] host_bs,
+  output wire [ 16-1:0] host_wdat,
+  input  wire [ 16-1:0] host_rdat,
+  input  wire           host_ack,
 	//video
 	output	_hsync,				//horizontal sync
 	output	_vsync,				//vertical sync
@@ -345,6 +355,8 @@ wire		_wprot;					//disk is write-protected
 //--------------------------------------------------------------------------------------
 
 wire	bls;					//blitter slowdown - required for sharing bus cycles between Blitter and CPU
+
+wire cpurst;
 
 wire	int7;					//int7 interrupt request from Action Replay
 wire	[2:0] _iplx;			//interrupt request lines from Paula
@@ -621,7 +633,15 @@ userio USERIO1
 	.ide_config(ide_config),
   .cpu_config(cpu_config),
 	.usrrst(usrrst),
-	.bootrst(bootrst)
+	.bootrst(bootrst),
+  .cpurst(cpurst),
+  .host_cs      (host_cs          ),
+  .host_adr     (host_adr         ),
+  .host_we      (host_we          ),
+  .host_bs      (host_bs          ),
+  .host_wdat    (host_wdat        ),
+  .host_rdat    (host_rdat        ),
+  .host_ack     (host_ack         )
 );
 
 //assign cpu_speed = (chipset_config[0] & ~int7 & ~freeze & ~ovr);
@@ -934,7 +954,7 @@ syscontrol CONTROL1
 (	
 	.clk(clk),
 	.cnt(sof),
-	.mrst(kbdrst | usrrst),
+	.mrst(kbdrst | usrrst | rst_ext),
 	.boot_done(sel_cia_a & sel_cia_b),
 	.reset(reset),
 	.boot(boot),
@@ -966,9 +986,12 @@ assign sdo = paula_sdo | user_sdo;
 //--------------------------------------------------------------------------------------
 
 //cpu reset and clock
-assign _cpu_reset = ~reset;
+assign _cpu_reset = ~(reset || cpurst);
 
 //--------------------------------------------------------------------------------------
+
+// minimig reset status
+assign rst_out = reset;
 
 endmodule
 
@@ -1004,7 +1027,7 @@ module syscontrol
 
 //local signals
 reg		smrst0, smrst1;					//registered input
-reg		_boot = 0;
+reg		_boot = 1;
 reg		[2:0] rst_cnt = 0;		//reset timer SHOULD BE CLEARED BY CONFIG
 wire	_rst;					//local reset signal
 
@@ -1031,7 +1054,9 @@ always @(posedge clk)
 		_boot <= 1'd1;
 
 //global boot output
-assign boot = ~_boot;
+//assign boot = ~_boot;
+assign boot = 1'b0;
+
 
 //global reset output
 assign reset = ~_rst;
@@ -1410,7 +1435,8 @@ reg _ta_n;
 always @(negedge clk or posedge _as)
   if (_as)
     _ta_n <= VCC;
-  else if (!l_as && cck && ((!vpa && !(dbr && dbs)) || (vpa && vma && eclk[8])) && !nrdy)
+//  else if (!l_as && cck && ((!vpa && !(dbr && dbs)) || (vpa && vma && eclk[8])) && !nrdy)
+  else if (!_as && cck && ((!vpa && !(dbr && dbs)) || (vpa && vma && eclk[8])) && !nrdy)
     _ta_n <= GND; 
 
     
@@ -1419,14 +1445,19 @@ always @(negedge clk or posedge _as)
 assign _dtack = (_ta_n );
 
 // synchronous control signals
-assign enable = ((~l_as & ~l_dtack & ~cck & ~turbo_cpu) | (~l_as28m & l_dtack & ~(dbr & xbs) & ~nrdy & turbo_cpu));
-assign rd = (enable & lr_w);
+//assign enable = ((~l_as & ~l_dtack & ~cck & ~turbo) | (~l_as28m & l_dtack & ~(dbr & xbs) & ~nrdy & turbo));
+assign enable = ((~_as & ~_dtack & ~cck & ~turbo) | (~_as28m & _dtack & ~(dbr & xbs) & ~nrdy & turbo));
+//assign rd = (enable & lr_w);
+assign rd = (enable & r_w);
 // in turbo mode l_uds and l_lds may be delayed by 35 ns
-assign hwr = (enable & ~lr_w & ~l_uds);
-assign lwr = (enable & ~lr_w & ~l_lds);
+//assign hwr = (enable & ~lr_w & ~l_uds);
+//assign lwr = (enable & ~lr_w & ~l_lds);
+assign hwr = (enable & ~r_w & ~_uds);
+assign lwr = (enable & ~r_w & ~_lds);
 
 //blitter slow down signalling, asserted whenever CPU is missing bus access to chip ram, slow ram and custom registers 
-assign bls = dbs & ~l_as & l_dtack;
+//assign bls = dbs & ~l_as & l_dtack;
+assign bls = dbs & ~_as & _dtack;
 
 // generate data buffer output enable
 assign doe = r_w & ~_as;
