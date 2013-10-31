@@ -52,7 +52,56 @@ char UploadKickstart(char *name)
 	BootPrint("Loading file: ");
 	BootPrint(filename);
 
-    if (RAOpen(&romfile, filename))
+  RAOpen(&romfile, filename);
+  RARead(&romfile,sector_buffer,512);
+  printf("ks[0] = %02x  ks[1] = %02x  ks[2] = %02x  ks[3] = %02x\r", sector_buffer[0], sector_buffer[1], sector_buffer[2], sector_buffer[3]);
+
+  RAOpen(&romfile, filename);
+  RARead(&romfile,sector_buffer,512);
+  printf("ks_16[0] = %04x  ks_16[1] = %04x\r", ((unsigned short *)sector_buffer)[0], ((unsigned short *)sector_buffer)[1]);
+
+  RAOpen(&romfile, filename);
+  RARead(&romfile,sector_buffer,512);
+  printf("ks_32[0] = %08x\r", ((unsigned int *)sector_buffer)[0]);
+
+  if (RAOpen(&romfile, filename))
+  {
+    int i,j;
+    unsigned int adr, size, base=0x180000, offset=0xc00000, data;
+    BootPrint("Uploading 512KB Kickstart ...");
+    size = ((romfile.file.size)+511)>>9;
+    printf("File size: %d\r", size);
+
+    printf("[");
+    for (i=0; i<size; i++) {
+      if (!(i&15)) printf("*");
+      RARead(&romfile,sector_buffer,512);
+      adr = offset + base + i*512;
+      for (j=0; j<512; j=j+4) {
+        data = ((unsigned int*)sector_buffer)[j>>2];
+        write32(adr+j, data);
+        if (data != read32(adr+j)) printf("Mismatch @ 0x%08x : 0x%08x != 0x%08x\r", adr+j, data, read32(adr+j));
+      }
+      //EnableFpga();
+      //adr = base + i*512;
+      //SPI(OSD_CMD_WR);
+      //SPI(adr&0xff); adr = adr>>8;
+      //SPI(adr&0xff); adr = adr>>8;
+      //SPI(adr&0xff); adr = adr>>8;
+      //SPI(adr&0xff); adr = adr>>8;
+      //for (j=0; j<512; j++) {
+      //  SPI(sector_buffer[j]);
+      //  SPIN();
+      //}
+      //DisableFpga();
+    }
+    printf("]\r");
+    printf("SDRAM read: ks_32[0] = %08x\r", read32(offset + base));
+    printf("SDRAM read: ks_32[1] = %08x\r", read32(offset + base + 4));
+    return(1);
+  }
+
+/*
     {
         if (romfile.size == 0x80000)
         { // 512KB Kickstart ROM
@@ -87,6 +136,7 @@ char UploadKickstart(char *name)
             BootPrint("Unsupported ROM file size!");
         }
     }
+*/
     else
     {
         sprintf(s, "No \"%s\" file!", filename);
@@ -227,13 +277,16 @@ unsigned char LoadConfiguration(char *filename)
 
 void ApplyConfiguration(char reloadkickstart)
 {
+  DEBUG_FUNC_IN();
+
+
     ConfigCPU(config.cpu);
 
 	if(reloadkickstart)
 	{
 		ConfigChipset(config.chipset | CONFIG_TURBO); // set CPU in turbo mode
 		ConfigFloppy(1, CONFIG_FLOPPY2X); // set floppy speed
-		OsdReset(RESET_BOOTLOADER);
+		//OsdReset(RESET_BOOTLOADER);
 
 		if (!UploadKickstart(config.kickstart.name))
 		{
@@ -358,14 +411,37 @@ void ApplyConfiguration(char reloadkickstart)
 
 	if(reloadkickstart)
 	{
-	    WaitTimer(5000);
-	    BootExit();
-	}
-	else
-		OsdReset(RESET_NORMAL);
+    printf("Reloading kickstart ...\r");
+	  TIMER_wait(1000);
+	    //BootExit();
+    EnableOsd();
+    SPI(OSD_CMD_RST);
+    SPI(6);
+    DisableOsd();
+    SPIN();
+    EnableOsd();
+    SPI(OSD_CMD_RST);
+    SPI(0);
+    DisableOsd();
 
-    ConfigChipset(config.chipset);
-    ConfigFloppy(config.floppy.drives, config.floppy.speed);
+	}
+	else {
+    printf("Resetting ...\r");
+		//OsdReset(RESET_NORMAL);
+    EnableOsd();
+    SPI(OSD_CMD_RST);
+    SPI(6);
+    DisableOsd();
+    SPIN();
+    EnableOsd();
+    SPI(OSD_CMD_RST);
+    SPI(0);
+    DisableOsd();
+}
+
+  ConfigChipset(config.chipset);
+  ConfigFloppy(config.floppy.drives, config.floppy.speed);
+  DEBUG_FUNC_OUT();
 }
 
 

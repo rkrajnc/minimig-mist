@@ -681,7 +681,11 @@ void OsdReset(unsigned char boot)
     EnableOsd();
     //SPI(OSDCMDRST | (boot & 0x01));
     SPI(OSD_CMD_RST);
-    SPI(boot & 0x01);
+    SPI(0x2 | (boot & 0x01));
+    DisableOsd();
+    EnableOsd();
+    SPI(OSD_CMD_RST);
+    SPI(0x0);
     DisableOsd();
 }
 
@@ -691,6 +695,10 @@ void OsdReconfig()
 	//SPI(OSDCMDRECONFIG);
   SPI(OSD_CMD_RST);
   SPI(0x02);
+	DisableOsd();
+	EnableOsd();
+  SPI(OSD_CMD_RST);
+  SPI(0x00);
 	DisableOsd();
 }
 
