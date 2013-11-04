@@ -207,14 +207,14 @@ module Minimig1
 	input	sdi,				//SPI data input
 	inout	sdo,				//SPI data output
 	input	sck,				//SPI clock
-  // host
-  output wire           host_cs,
-  output wire [ 24-1:0] host_adr,
-  output wire           host_we,
-  output wire [  2-1:0] host_bs,
-  output wire [ 16-1:0] host_wdat,
-  input  wire [ 16-1:0] host_rdat,
-  input  wire           host_ack,
+ // // host
+ // output wire           host_cs,
+ // output wire [ 24-1:0] host_adr,
+ // output wire           host_we,
+ // output wire [  2-1:0] host_bs,
+ // output wire [ 16-1:0] host_wdat,
+ // input  wire [ 16-1:0] host_rdat,
+ // input  wire           host_ack,
 	//video
 	output	_hsync,				//horizontal sync
 	output	_vsync,				//vertical sync
@@ -405,6 +405,14 @@ wire  [5:0] joy_emu;
 
 wire  dtr;
 
+// host interface
+wire           host_cs;
+wire [ 24-1:0] host_adr;
+wire           host_we;
+wire [  2-1:0] host_bs;
+wire [ 16-1:0] host_wdat;
+wire [ 16-1:0] host_rdat;
+wire           host_ack;
 
 //--------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------
@@ -784,7 +792,14 @@ m68k_bridge CPU1
 	.cpudatain(cpudata_in),
 	.data(cpu_data),
 	.data_out(cpu_data_out),
-	.data_in(cpu_data_in)
+	.data_in(cpu_data_in),
+  ._cpu_reset (_cpu_reset),
+  .host_cs (host_cs),
+  .host_adr (host_adr[23:1]),
+  .host_we (host_we),
+  .host_bs (host_bs),
+  .host_wdat (host_wdat),
+  .host_rdat ()
 );
 
 //instantiate RAM banks mapper
@@ -1342,7 +1357,15 @@ module m68k_bridge
   input [15:0] cpudatain,
 //  output  reg [15:0] data_out,  // internal data bus output
   output  [15:0] data_out,  // internal data bus output
-  input [15:0] data_in      // internal data bus input
+  input [15:0] data_in,      // internal data bus input
+  // UserIO interface
+  input _cpu_reset,
+  input host_cs,
+  input [23:1] host_adr,
+  input host_we,
+  input [1:0] host_bs,
+  input [15:0] host_wdat,
+  output [15:0] host_rdat
 );
 
 
@@ -1414,16 +1437,23 @@ always @(posedge clk)
 		vma <= 1;
 
 //latched CPU bus control signals
-always @(posedge clk)
-//	{lr_w,l_as,l_uds,l_lds,l_dtack} <= {r_w,_as,_uds,_lds,_dtack};
-  {lr_w,l_as,l_dtack} <= ({r_w,_as,_dtack});
+//always @(posedge clk)
+////	{lr_w,l_as,l_uds,l_lds,l_dtack} <= {r_w,_as,_uds,_lds,_dtack};
+//  {lr_w,l_as,l_dtack} <= ({r_w,_as,_dtack});
+always @ (posedge clk) begin
+  lr_w <= _cpu_reset ? r_w : !host_we;
+  l_as <= _cpu_reset ? _as : !host_cs;
+  l_dtack <= _dtack;
+end
 
-always @(posedge clk28m)
-  {l_uds,l_lds} <= ({_uds,_lds});
+always @(posedge clk28m) begin
+  l_uds <= _cpu_reset ? _uds : !(host_bs[1]);
+  l_lds <= _cpu_reset ? _lds : !(host_bs[0]);
+end
 
 reg _as28m;
 always @(posedge clk28m)
-  _as28m <= _as;
+  _as28m <= _cpu_reset ? _as : !host_cs;
 
 reg l_as28m;
 always @(posedge clk)
@@ -1445,19 +1475,19 @@ always @(negedge clk or posedge _as)
 assign _dtack = (_ta_n );
 
 // synchronous control signals
-//assign enable = ((~l_as & ~l_dtack & ~cck & ~turbo) | (~l_as28m & l_dtack & ~(dbr & xbs) & ~nrdy & turbo));
-assign enable = ((~_as & ~_dtack & ~cck & ~turbo) | (~_as28m & _dtack & ~(dbr & xbs) & ~nrdy & turbo));
-//assign rd = (enable & lr_w);
-assign rd = (enable & r_w);
+assign enable = ((~l_as & ~l_dtack & ~cck & ~turbo) | (~l_as28m & l_dtack & ~(dbr & xbs) & ~nrdy & turbo));
+//assign enable = ((~_as & ~_dtack & ~cck & ~turbo) | (~_as28m & _dtack & ~(dbr & xbs) & ~nrdy & turbo));
+assign rd = (enable & lr_w);
+//assign rd = _cpu_reset ? (enable & r_w) : !host_we;
 // in turbo mode l_uds and l_lds may be delayed by 35 ns
-//assign hwr = (enable & ~lr_w & ~l_uds);
-//assign lwr = (enable & ~lr_w & ~l_lds);
-assign hwr = (enable & ~r_w & ~_uds);
-assign lwr = (enable & ~r_w & ~_lds);
+assign hwr = (enable & ~lr_w & ~l_uds);
+assign lwr = (enable & ~lr_w & ~l_lds);
+//assign hwr = _cpu_reset ? (enable & ~r_w & ~_uds) : host_we && host_bs[1];
+//assign lwr = _cpu_reset ? (enable & ~r_w & ~_lds) : host_we && host_bs[0];
 
 //blitter slow down signalling, asserted whenever CPU is missing bus access to chip ram, slow ram and custom registers 
-//assign bls = dbs & ~l_as & l_dtack;
-assign bls = dbs & ~_as & _dtack;
+assign bls = dbs & ~l_as & l_dtack;
+//assign bls = dbs & ~_as & _dtack;
 
 // generate data buffer output enable
 assign doe = r_w & ~_as;
@@ -1467,7 +1497,7 @@ assign doe = r_w & ~_as;
 // data_out multiplexer and latch   
 //always @(data)
 //  data_out <= wrdata;
-assign data_out = cpudatain;
+assign data_out = _cpu_reset ? cpudatain : host_wdat;
 
 //always @(clk or data_in)
 //  if (!clk)
@@ -1482,10 +1512,11 @@ always @(posedge clk28m)
 // CPU data bus tristate buffers and output data multiplexer
 //assign data[15:0] = doe ? cache_hit ? cache_out : ldata_in[15:0] : 16'bz;
 assign data[15:0] = ldata_in;
+assign host_rdat = ldata_in;
 
 //always @(posedge clk)
 //	address_out[23:1] <= address[23:1];
-assign 	address_out[23:1] = address[23:1];
+assign 	address_out[23:1] = _cpu_reset ? address[23:1] : host_adr[23:1];
 
 endmodule
 
