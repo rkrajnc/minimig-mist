@@ -2,6 +2,8 @@
 
 ../../../../rtl/io/i_sync.v
 
+../../../../rtl/fifo/sync_fifo.v
+
 ../../../../rtl/minimig/ActionReplay3.v
 ../../../../rtl/minimig/Agnus.v
 ../../../../rtl/minimig/Amber.v

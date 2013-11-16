@@ -36,6 +36,7 @@ module soc_tb();
 //// system ////
 reg            RST;
 reg            ERR;
+reg  [ 32-1:0] datr;
 
 
 //// soc ////
@@ -194,6 +195,9 @@ initial begin
   //while (!soc_top.ctrl_top.rst) @ (posedge soc_top.ctrl_top.clk); #1;
   wait (!soc_top.ctrl_top.ctrl_regs.rst);
 
+  // force unreset minimig
+  force soc_top.minimig.reset = 1'b0;
+
   force soc_top.tg68_rst = 1'b1;
   repeat(10) @ (posedge soc_top.clk_7);
   force soc_top.tg68_rst = 1'b0;
@@ -212,7 +216,7 @@ initial begin
   // send address
   ctrl_regs_cycle(32'h00800024, 1'b1, 4'hf, 32'h00000000);
   ctrl_regs_cycle(32'h00800024, 1'b1, 4'hf, 32'h00000000);
-  ctrl_regs_cycle(32'h00800024, 1'b1, 4'hf, 32'h00000018);
+  ctrl_regs_cycle(32'h00800024, 1'b1, 4'hf, 32'h00000000);
   ctrl_regs_cycle(32'h00800024, 1'b1, 4'hf, 32'h00000000);
   // send data
   ctrl_regs_cycle(32'h00800024, 1'b1, 4'hf, 32'h000000aa);
@@ -229,13 +233,16 @@ initial begin
   ctrl_regs_cycle(32'h00800024, 1'b1, 4'hf, 32'h000000ab);
   ctrl_regs_cycle(32'h00800024, 1'b1, 4'hf, 32'h000000cd);
   ctrl_regs_cycle(32'h00800024, 1'b1, 4'hf, 32'h000000ef);
-
   repeat (100) @ (posedge soc_top.clk_7);
 
   // disable OSD (SPI chip select)
   ctrl_regs_cycle(32'h00800020, 1'b1, 4'hf, 32'h00000040);
-
   repeat (100) @ (posedge soc_top.clk_7);
+
+  // readback
+  ctrl_bridge_cycle(32'h00180000, 1'b0, 4'hf, 32'h00000000, datr);
+  repeat (100) @ (posedge soc_top.clk_7);
+
 
 /*
   // try a TG68 cycle
