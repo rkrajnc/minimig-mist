@@ -427,12 +427,12 @@ module osd
   output  reg [1:0] autofire_config = 0,
 	output	reg usrrst=1'b0,
 	output	reg bootrst=1'b0,
-  output reg cpurst=1'b0,
+  output reg cpurst=1'b1,
   // host
-  output wire           host_cs,
+  output reg            host_cs,
   output wire [ 24-1:0] host_adr,
-  output wire           host_we,
-  output wire [  2-1:0] host_bs,
+  output reg            host_we,
+  output reg  [  2-1:0] host_bs,
   output wire [ 16-1:0] host_wdat,
   input  wire [ 16-1:0] host_rdat,
   input  wire           host_ack
@@ -800,6 +800,97 @@ always @ (posedge clk) begin
   end
 end
 
+reg  [ 8-1:0] mem_dat_r;
+always @ (posedge clk) begin
+  if (rx && !cmd && spi_mem_write_sel && !mem_toggle) mem_dat_r <= #1 wrdat[7:0];
+end
+
+wire wr_fifo_empty;
+wire wr_fifo_full;
+reg  wr_fifo_rd_en;
+sync_fifo #(
+  .FD (4),
+  .DW (16)
+) wr_fifo (
+  .clk          (clk),
+  .rst          (reset),
+  .fifo_in      ({mem_dat_r, wrdat}),
+  .fifo_out     (host_wdat),
+  .fifo_wr_en   (rx && mem_toggle),
+  .fifo_rd_en   (wr_fifo_rd_en),
+  .fifo_full    (wr_fifo_full),
+  .fifo_empty   (wr_fifo_empty)
+);
+
+reg  [2-1:0] wr_state = 2'b00;
+localparam ST_WR_IDLE = 2'b00;
+localparam ST_WR_WRITE = 2'b10;
+localparam ST_WR_WAIT = 2'b11;
+/*
+always @ (posedge clk or posedge reset) begin
+  if (reset)
+    wr_state <= #1 ST_WR_IDLE;
+  else begin
+    wr_fifo_rd_en <= #1 1'b0;
+    host_cs <= #1 1'b0;
+    host_we <= #1 1'b0;
+    host_bs <= #1 2'b00;
+    wr_fifo_rd_en <= #1 1'b0;
+    case (wr_state)
+      ST_WR_IDLE: begin
+        if (!wr_fifo_empty && !wr_fifo_rd_en) wr_state <= #1 ST_WR_WRITE;
+      end
+      ST_WR_WRITE: begin
+        host_cs <= #1 1'b1;
+        host_we <= #1 1'b1;
+        host_bs <= #1 2'b11;
+        if (host_ack) wr_state <= #1 ST_WR_WAIT;
+      end
+      ST_WR_WAIT: begin
+        host_cs <= #1 1'b1;
+        host_we <= #1 1'b1;
+        host_bs <= #1 2'b11;
+        wr_state <= #1 ST_WR_IDLE;
+        wr_fifo_rd_en <= #1 1'b1;
+      end
+    endcase
+  end
+end
+*/
+always @ (posedge clk or posedge reset) begin
+  if (reset)
+    wr_state <= #1 ST_WR_IDLE;
+  else begin
+    case (wr_state)
+      ST_WR_IDLE: begin
+        wr_fifo_rd_en <= #1 1'b0;
+        host_cs <= #1 1'b0;
+        host_we <= #1 1'b0;
+        host_bs <= #1 2'b00;
+        wr_fifo_rd_en <= #1 1'b0;
+        if (!wr_fifo_empty && !wr_fifo_rd_en) wr_state <= #1 ST_WR_WRITE;
+      end
+      ST_WR_WRITE: begin
+        host_cs <= #1 1'b1;
+        host_we <= #1 1'b1;
+        host_bs <= #1 2'b11;
+        if (host_ack) begin
+          wr_fifo_rd_en <= #1 1'b1;
+          wr_state <= #1 ST_WR_IDLE;
+        end
+      end
+      ST_WR_WAIT: begin
+        host_cs <= #1 1'b0;
+        host_we <= #1 1'b0;
+        host_bs <= #1 2'b00;
+        wr_state <= #1 ST_WR_IDLE;
+        wr_fifo_rd_en <= #1 1'b0;
+      end
+    endcase
+  end
+end
+
+
 reg  [16-1:0] mem_page;
 reg  [16-1:0] mem_cnt;
 wire [32-1:0] mem_adr;
@@ -810,36 +901,13 @@ always @ (posedge clk) begin
       1 : mem_cnt [15:8] <= #1 wrdat[7:0];
       2 : mem_page[ 7:0] <= #1 wrdat[7:0];
       3 : mem_page[15:8] <= #1 wrdat[7:0];
-      4 : if(mem_toggle) mem_cnt [15:0] <= #1 mem_cnt + 16'd2;
     endcase
-  end
+  end else if (wr_fifo_rd_en) mem_cnt [15:0] <= #1 mem_cnt + 16'd2;
+
 end
 
-reg  [16-1:0] mem_cnt_d;
-always @ (posedge clk) mem_cnt_d <= #1 mem_cnt;
-
-assign mem_adr = {mem_page, mem_cnt_d}; // TODO check if mem_cnt_d is updated at the right time (not too soon!)
-
-reg  [ 8-1:0] mem_dat_r;
-always @ (posedge clk) begin
-  if (rx && !cmd && spi_mem_write_sel && !mem_toggle) mem_dat_r <= #1 wrdat[7:0];
-end
-
-reg rx_d;
-always @ (posedge clk) rx_d <= #1 rx;
-
-assign host_cs   = rx_d && mem_toggle_d;
+assign mem_adr = {mem_page, mem_cnt};
 assign host_adr  = mem_adr[23:0];
-assign host_we   = mem_toggle_d;
-assign host_bs   = 2'b11;
-assign host_wdat = {wrdat, mem_dat_r};
-
-wire mem_as, mem_bhe, mem_ble, mem_rw;
-assign mem_as  = ~mem_toggle_d;
-assign mem_bhe = ~mem_toggle_d;
-assign mem_ble = ~mem_toggle_d;
-assign mem_rw  = ~mem_toggle_d;
-
 
 // register read
 wire [7:0] rtl_version;
