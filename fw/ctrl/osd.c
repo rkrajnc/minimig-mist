@@ -248,7 +248,7 @@ void OsdWriteOffset(unsigned char n, char *s, unsigned char invert, unsigned cha
 //        SPI(OSDCMDWRITE | 0x10 | n);
 //    else
         //SPI(OSDCMDWRITE | n);
-        SPI(OSD_CMD_WR);
+        SPI(OSD_CMD_OSD_WR);
         SPI(0x00); SPI(0x00); SPI(0x00); SPI(n);
 
 	if(invert)
@@ -315,7 +315,7 @@ void OsdWriteOffset(unsigned char n, char *s, unsigned char invert, unsigned cha
 		        DisableOsd();
 		        EnableOsd();
 		        //SPI(OSDCMDWRITE | n);
-            SPI(OSD_CMD_WR);
+            SPI(OSD_CMD_OSD_WR);
             SPI(0x00); SPI(0x00); SPI(0x00); SPI(n);
 
 		    }
@@ -369,7 +369,7 @@ void OsdDrawLogo(unsigned char n, char row,char superimpose)
 
     // select buffer and line to write to
     //SPI(OSDCMDWRITE | n);
-    SPI(OSD_CMD_WR);
+    SPI(OSD_CMD_OSD_WR);
     SPI(0x00); SPI(0x00); SPI(0x00); SPI(n);
 
 	const unsigned char *lp=logodata[row];
@@ -467,7 +467,7 @@ void OsdWriteDoubleSize(unsigned char n, char *s, unsigned char pass)
 
     // select buffer and line to write to
     //SPI(OSDCMDWRITE | n);
-    SPI(OSD_CMD_WR);
+    SPI(OSD_CMD_OSD_WR);
     SPI(0x00); SPI(0x00); SPI(0x00); SPI(n);
 
     i = 0;
@@ -564,7 +564,7 @@ void OSD_PrintText(unsigned char line, char *text, unsigned long start, unsigned
 //       SPI(OSDCMDWRITE | 0x10 | line);
 //    else
     //SPI(OSDCMDWRITE | line);
-    SPI(OSD_CMD_WR);
+    SPI(OSD_CMD_OSD_WR);
     SPI(0x00); SPI(0x00); SPI(0x00); SPI(line);
 
 	if(invert)
@@ -633,7 +633,7 @@ void OsdClear(void)
 
     // select buffer to write to
     //SPI(OSDCMDWRITE | 0x18);
-    SPI(OSD_CMD_WR);
+    SPI(OSD_CMD_OSD_WR);
     SPI(0x00); SPI(0x00); SPI(0x00); SPI(0x18);
 
     // clear buffer
@@ -702,14 +702,32 @@ void OsdReconfig()
 	DisableOsd();
 }
 
-void ConfigFilter(unsigned char lores, unsigned char hires)
+
+//void ConfigFilter(unsigned char lores, unsigned char hires, unsigned char scanlines)
+//{
+//    EnableOsd();
+//    //SPI(OSDCMDCFGFLT | ((hires & 0x03) << 2) | (lores & 0x03));
+//    SPI(OSD_CMD_VID);
+//    SPI(((hires & 0x03) << 4) | ((lores & 0x03)<<2) | (scanlines & 0x03));
+//    DisableOsd();
+//}
+//
+//void ConfigScanlines(unsigned char scanlines)
+//{
+//    EnableOsd();
+//    //SPI(OSDCMDCFGSCL | (scanlines & 0x0F)); TODO! same reg as OSD_CMD_VID!
+//    DisableOsd();
+//}
+
+void ConfigVideo(unsigned char hires, unsigned char lores, unsigned char scanlines)
 {
     EnableOsd();
     //SPI(OSDCMDCFGFLT | ((hires & 0x03) << 2) | (lores & 0x03));
     SPI(OSD_CMD_VID);
-    SPI(((hires & 0x03) << 4) | (lores & 0x03)<<2);
+    SPI(((hires & 0x03) << 4) | ((lores & 0x03)<<2) | (scanlines & 0x03));
     DisableOsd();
 }
+
 
 void ConfigMemory(unsigned char memory)
 {

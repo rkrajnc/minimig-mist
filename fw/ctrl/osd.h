@@ -41,7 +41,8 @@
 #define OSD_CMD_FLP       0x44
 #define OSD_CMD_HDD       0x54
 #define OSD_CMD_JOY       0x64
-#define OSD_CMD_WR        0x0c
+#define OSD_CMD_OSD_WR    0x0c
+#define OSD_CMD_WR        0x1c
 
 #define DISABLE_KEYBOARD 0x02        // disable keyboard while OSD is active
 
@@ -102,12 +103,13 @@ void OsdDisable(void);
 void OsdWaitVBL(void);
 void OsdReset(unsigned char boot);
 void OsdReconfig();	// Reset to Chameleon core.
-void ConfigFilter(unsigned char lores, unsigned char hires);
+//void ConfigFilter(unsigned char lores, unsigned char hires);
+//void ConfigScanlines(unsigned char scanlines);
+void ConfigVideo(unsigned char hires, unsigned char lores, unsigned char scanlines);
 void ConfigMemory(unsigned char memory);
 void ConfigCPU(unsigned char cpu);
 void ConfigChipset(unsigned char chipset);
 void ConfigFloppy(unsigned char drives, unsigned char speed);
-void ConfigScanlines(unsigned char scanlines);
 void ConfigIDE(unsigned char gayle, unsigned char master, unsigned char slave);
 void ConfigAutofire(unsigned char autofire);
 unsigned char OsdGetCtrl(void);

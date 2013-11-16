@@ -127,7 +127,13 @@ __geta4 void main(void)
   printf("Waiting for SDRAM ... ");
   while (!(read32(REG_SYS_STAT_ADR) & 0x1));
   printf("OK (%01x)\r", read32(REG_SYS_STAT_ADR));
-  
+
+  printf("Unresetting from ctrl block ...\r");
+  EnableOsd();
+  SPI(OSD_CMD_RST);
+  SPI(4);
+  DisableOsd();
+  write32(REG_RST_ADR, 0);
 
   //HideSplash();
   SPI_fast();
@@ -190,27 +196,31 @@ __geta4 void main(void)
   BootPrintEx("Booting ...");
   printf("Booting ...\r");
 
-  TIMER_wait(5000);
+  //TIMER_wait(5000);
   config.kickstart.name[0]=0;
   SetConfigurationFilename(0); // Use default config
 
 /**/
+  //write32(REG_RST_ADR, 0);
   EnableOsd();
   SPI(OSD_CMD_RST);
   SPI(4);
   DisableOsd();
-  write32(REG_RST_ADR, 0);
   printf("Waiting for minimig ... ");
   while ((read32(REG_SYS_STAT_ADR) & 0x2));
   printf("OK (%1x)\r", read32(REG_SYS_STAT_ADR));
 /**/ 
   LoadConfiguration(0);  // Use slot-based config filename
 /**/
+  int i;
+  for (i=0; i<16; i++) printf("KICK[%d]=0x%08x\r", i, read32(0xc00000+0x180000+(i<<2)));
+  
   EnableOsd();
   SPI(OSD_CMD_RST);
   SPI(0);
   DisableOsd();
 /**/ 
+
 
   // main loop
   while (1) {

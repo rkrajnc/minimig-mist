@@ -52,17 +52,19 @@ char UploadKickstart(char *name)
 	BootPrint("Loading file: ");
 	BootPrint(filename);
 
-  RAOpen(&romfile, filename);
-  RARead(&romfile,sector_buffer,512);
-  printf("ks[0] = %02x  ks[1] = %02x  ks[2] = %02x  ks[3] = %02x\r", sector_buffer[0], sector_buffer[1], sector_buffer[2], sector_buffer[3]);
-
-  RAOpen(&romfile, filename);
-  RARead(&romfile,sector_buffer,512);
-  printf("ks_16[0] = %04x  ks_16[1] = %04x\r", ((unsigned short *)sector_buffer)[0], ((unsigned short *)sector_buffer)[1]);
-
-  RAOpen(&romfile, filename);
-  RARead(&romfile,sector_buffer,512);
-  printf("ks_32[0] = %08x\r", ((unsigned int *)sector_buffer)[0]);
+  // reset minimig & CPU
+  EnableOsd();
+  SPI(OSD_CMD_RST);
+  SPI(6);
+  DisableOsd();
+  //while ((read32(REG_SYS_STAT_ADR) & 0x2));
+  SPIN(); SPIN();
+  EnableOsd();
+  SPI(OSD_CMD_RST);
+  SPI(4);
+  DisableOsd();
+  SPIN(); SPIN();
+  while ((read32(REG_SYS_STAT_ADR) & 0x2));
 
   if (RAOpen(&romfile, filename))
   {
@@ -76,29 +78,42 @@ char UploadKickstart(char *name)
     for (i=0; i<size; i++) {
       if (!(i&15)) printf("*");
       RARead(&romfile,sector_buffer,512);
-      adr = offset + base + i*512;
-      for (j=0; j<512; j=j+4) {
-        data = ((unsigned int*)sector_buffer)[j>>2];
-        write32(adr+j, data);
-        if (data != read32(adr+j)) printf("Mismatch @ 0x%08x : 0x%08x != 0x%08x\r", adr+j, data, read32(adr+j));
-      }
-      //EnableFpga();
-      //adr = base + i*512;
-      //SPI(OSD_CMD_WR);
-      //SPI(adr&0xff); adr = adr>>8;
-      //SPI(adr&0xff); adr = adr>>8;
-      //SPI(adr&0xff); adr = adr>>8;
-      //SPI(adr&0xff); adr = adr>>8;
-      //for (j=0; j<512; j++) {
-      //  SPI(sector_buffer[j]);
-      //  SPIN();
+      //adr = offset + base + i*512;
+      //data = ((unsigned int*)sector_buffer)[0];
+      //write32(adr, data);
+      //for (j=0; j<512; j=j+4) {
+      //  data = ((unsigned int*)sector_buffer)[j>>2];
+      //  write32(adr+j, data);
+      //  if (data != read32(adr+j)) printf("Mismatch @ 0x%08x : 0x%08x != 0x%08x\r", adr+j, data, read32(adr+j));
       //}
-      //DisableFpga();
+      EnableOsd();
+      adr = 0x00000 + i*512;
+      SPI(OSD_CMD_WR);
+      SPI(adr&0xff); adr = adr>>8;
+      SPI(adr&0xff); adr = adr>>8;
+      SPI(adr&0xff); adr = adr>>8;
+      SPI(adr&0xff); adr = adr>>8;
+      for (j=0; j<512; j=j+4) {
+        SPI(sector_buffer[j+0]);
+        SPIN(); SPIN();
+        SPI(sector_buffer[j+1]);
+        SPIN(); SPIN();
+        SPI(sector_buffer[j+2]);
+        SPIN(); SPIN();
+        SPI(sector_buffer[j+3]);
+        SPIN(); SPIN();
+        //data = ((unsigned int*)sector_buffer)[j>>2];
+        //if (data != read32(offset+base+i*512+j)) printf("Mismatch @ 0x%08x : 0x%08x != 0x%08x\r", offset+base+i*512+j, data, read32(offset+base+i*512+j));
+      }
+      DisableOsd();
     }
     printf("]\r");
-    printf("SDRAM read: ks_32[0] = %08x\r", read32(offset + base));
-    printf("SDRAM read: ks_32[1] = %08x\r", read32(offset + base + 4));
     return(1);
+    // unreset CPU
+    EnableOsd();
+    SPI(OSD_CMD_RST);
+    SPI(0);
+    DisableOsd();
   }
 
 /*
@@ -406,8 +421,9 @@ void ApplyConfiguration(char reloadkickstart)
 
     ConfigMemory(config.memory);
     ConfigCPU(config.cpu);
-    ConfigFilter(config.filter.lores, config.filter.hires);
-    ConfigScanlines(config.scanlines);
+    //ConfigFilter(config.filter.lores, config.filter.hires);
+    //ConfigScanlines(config.scanlines);
+    ConfigVideo(config.filter.hires, config.filter.lores, config.scanlines);
 
 	if(reloadkickstart)
 	{
@@ -418,12 +434,12 @@ void ApplyConfiguration(char reloadkickstart)
     SPI(OSD_CMD_RST);
     SPI(6);
     DisableOsd();
-    SPIN();
+    SPIN(); SPIN();
     EnableOsd();
     SPI(OSD_CMD_RST);
     SPI(0);
     DisableOsd();
-
+    //while ((read32(REG_SYS_STAT_ADR) & 0x2));
 	}
 	else {
     printf("Resetting ...\r");
@@ -432,11 +448,12 @@ void ApplyConfiguration(char reloadkickstart)
     SPI(OSD_CMD_RST);
     SPI(6);
     DisableOsd();
-    SPIN();
+    SPIN(); SPIN();
     EnableOsd();
     SPI(OSD_CMD_RST);
     SPI(0);
     DisableOsd();
+    //while ((read32(REG_SYS_STAT_ADR) & 0x2));
 }
 
   ConfigChipset(config.chipset);
