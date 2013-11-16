@@ -799,7 +799,8 @@ m68k_bridge CPU1
   .host_we (host_we),
   .host_bs (host_bs),
   .host_wdat (host_wdat),
-  .host_rdat ()
+  .host_rdat (host_rdat),
+  .host_ack (host_ack)
 );
 
 //instantiate RAM banks mapper
@@ -1365,7 +1366,8 @@ module m68k_bridge
   input host_we,
   input [1:0] host_bs,
   input [15:0] host_wdat,
-  output [15:0] host_rdat
+  output [15:0] host_rdat,
+  output host_ack
 );
 
 
@@ -1459,16 +1461,20 @@ reg l_as28m;
 always @(posedge clk)
   l_as28m <= _as28m;
 
+wire _as_and_cs;
+assign _as_and_cs = _cpu_reset ? _as : !host_cs;
+
 // data transfer acknowledge in normal mode
 reg _ta_n;
 //always @(posedge clk28m or posedge _as)
-always @(negedge clk or posedge _as)
-  if (_as)
+always @(negedge clk or posedge _as_and_cs)
+  if (_as_and_cs)
     _ta_n <= VCC;
-//  else if (!l_as && cck && ((!vpa && !(dbr && dbs)) || (vpa && vma && eclk[8])) && !nrdy)
-  else if (!_as && cck && ((!vpa && !(dbr && dbs)) || (vpa && vma && eclk[8])) && !nrdy)
+  else if (!l_as && cck && ((!vpa && !(dbr && dbs)) || (vpa && vma && eclk[8])) && !nrdy)
+//  else if (!_as && cck && ((!vpa && !(dbr && dbs)) || (vpa && vma && eclk[8])) && !nrdy)
     _ta_n <= GND; 
 
+assign host_ack = !_ta_n;
     
 // actual _dtack generation (from 7MHz synchronous bus access and cache hit access)
 //assign _dtack = (_ta_n & _ta_t & ~cache_hit);
