@@ -109,15 +109,15 @@ reg              sys_rst_en;
 
 // set initial system reset state
 initial sys_rst = 0;
-initial minimig_rst = 1;
-initial cpu_rst = 1;
+initial minimig_rst = 0;
+initial cpu_rst = 0;
 
 // system reset
 always @ (posedge clk, posedge rst) begin
   if (rst) begin
     sys_rst     <= #1 1'b0;
-    minimig_rst <= #1 1'b1;
-    cpu_rst     <= #1 1'b1;
+    minimig_rst <= #1 1'b0;
+    cpu_rst     <= #1 1'b0;
   end else if (sys_rst_en) begin
     sys_rst     <= #1 dat_w[0];
     minimig_rst <= #1 dat_w[1];
