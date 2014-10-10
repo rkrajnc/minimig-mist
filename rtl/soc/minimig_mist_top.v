@@ -122,6 +122,9 @@ wire [ 15-1:0] ldata;         // left DAC data
 wire [ 15-1:0] rdata;         // right DAC data
 wire           audio_left;
 wire           audio_right;
+wire [  8-1:0] red;
+wire [  8-1:0] green;
+wire [  8-1:0] blue;
 
 // sdram
 wire           reset_out;
@@ -135,13 +138,13 @@ wire [  2-1:0] sdram_ba;
 ////////////////////////////////////////
 
 // SDRAM
-assign SDRAM_CKE         = 1'b1;
-assign SDRAM_CLK         = clk_sdram;
-assign SDRAM_nCS         = sdram_cs[0];
-assign SDRAM_DQML        = sdram_dqm[0];
-assign SDRAM_DQMH        = sdram_dqm[1];
-assign SDRAM_BA          = sdram_ba;
-assign SDRAM_A[12]       = 1'b0; // unused SDRAM address bit
+assign SDRAM_CKE        = 1'b1;
+assign SDRAM_CLK        = clk_sdram;
+assign SDRAM_nCS        = sdram_cs[0];
+assign SDRAM_DQML       = sdram_dqm[0];
+assign SDRAM_DQMH       = sdram_dqm[1];
+assign SDRAM_BA         = sdram_ba;
+assign SDRAM_A[12]      = 1'b0; // unused SDRAM address bit
 
 // clock
 assign pll_in_clk       = CLOCK_27[0];
@@ -156,10 +159,10 @@ assign joy_emu_en       = 1'b1; // sw_8;
 
 assign LED              = ~led;
 
-// unused VGA pins
-assign VGA_R[1:0] = VGA_R[5:4];
-assign VGA_G[1:0] = VGA_G[5:4];
-assign VGA_B[1:0] = VGA_B[5:4];
+// VGA data
+assign VGA_R[5:0]       = red[7:2];
+assign VGA_G[5:0]       = green[7:2];
+assign VGA_B[5:0]       = blue[7:2];
 
 
 //// amiga clocks ////
@@ -394,9 +397,9 @@ minimig minimig (
   //video
   ._hsync       (VGA_HS           ),  // horizontal sync
   ._vsync       (VGA_VS           ),  // vertical sync
-  .red          (VGA_R[5:2]       ),  // red
-  .green        (VGA_G[5:2]       ),  // green
-  .blue         (VGA_B[5:2]       ),  // blue
+  .red          (red              ),  // red
+  .green        (green            ),  // green
+  .blue         (blue             ),  // blue
   //audio
   .left         (AUDIO_L          ),  // audio bitstream left
   .right        (AUDIO_R          ),  // audio bitstream right

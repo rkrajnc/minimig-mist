@@ -214,9 +214,9 @@ module minimig
 	//video
 	output	_hsync,				//horizontal sync
 	output	_vsync,				//vertical sync
-	output	[3:0] red,			//red
-	output	[3:0] green,		//green
-	output	[3:0] blue,			//blue
+	output	[7:0] red,			//red
+	output	[7:0] green,		//green
+	output	[7:0] blue,			//blue
 	//audio
 	output	left,				//audio bitstream left
 	output	right,				//audio bitstream right
@@ -318,9 +318,9 @@ wire		sof;					//start of video frame
 wire    vbl_int;        // vertical blanking interrupt
 wire		strhor_denise;			//horizontal strobe for Denise
 wire		strhor_paula;			//horizontal strobe for Paula
-wire		[3:0]red_i;				//denise red (internal)
-wire		[3:0]green_i;			//denise green (internal)
-wire		[3:0]blue_i;			//denise blue (internal)
+wire		[7:0]red_i;				//denise red (internal)
+wire		[7:0]green_i;			//denise green (internal)
+wire		[7:0]blue_i;			//denise blue (internal)
 wire		osd_blank;				//osd blanking 
 wire		osd_pixel;				//osd pixel(video) data
 wire		_hsync_i;				//horizontal sync (internal)

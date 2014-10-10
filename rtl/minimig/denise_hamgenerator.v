@@ -43,15 +43,15 @@ end
 always @ (*) begin
   case (bpldata[5:4])
     2'b00: // load rgb output with colour from table
-      rgb <= selcolor;
+      rgb = selcolor;
     2'b01: // hold green and red, modify blue
-      rgb  <= {rgb_prev[11:4],bpldata[3:0]};
+      rgb = {rgb_prev[11:4],bpldata[3:0]};
     2'b10: // hold green and blue, modify red
-      rgb <= {bpldata[3:0],rgb_prev[7:0]};
+      rgb = {bpldata[3:0],rgb_prev[7:0]};
     2'b11: // hold blue and red, modify green
-      rgb <= {rgb_prev[11:8],bpldata[3:0],rgb_prev[3:0]};
+      rgb = {rgb_prev[11:8],bpldata[3:0],rgb_prev[3:0]};
     default:
-      rgb <= selcolor;
+      rgb = selcolor;
   endcase
 end
 
