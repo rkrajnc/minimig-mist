@@ -90,7 +90,7 @@ const char *config_memory_fast_msg[] = {"none  ", "2.0 MB", "4.0 MB","8.0 MB","2
 const char *config_cpu_msg[] = {"68000 ", "68010", "-----","020 alpha"};
 const char *config_hdf_msg[] = {"Disabled", "Hardfile (disk img)", "MMC/SD card", "MMC/SD partition 1", "MMC/SD partition 2", "MMC/SD partition 3", "MMC/SD partition 4"};
 
-const char *config_chipset_msg[] = {"OCS-A500", "OCS-A1000", "ECS", "---"};
+const char *config_chipset_msg[] = {"OCS-A500", "OCS-A1000", "ECS", "---", "---", "---", "AGA", "---"};
 
 char *config_autofire_msg[] = {"        AUTOFIRE OFF", "        AUTOFIRE FAST", "        AUTOFIRE MEDIUM", "        AUTOFIRE SLOW"};
 
@@ -1667,7 +1667,7 @@ void HandleUI(void)
         strcat(s, config.chipset & CONFIG_NTSC ? "NTSC" : "PAL");
         OsdWrite(2, s, menusub == 1,0);
         strcpy(s, "     Chipset : ");
-        strcat(s, config_chipset_msg[config.chipset >> 2 & 3]);
+        strcat(s, config_chipset_msg[(config.chipset >> 2) & 7]);
         OsdWrite(3, s, menusub == 2,0);
         OsdWrite(4, "", 0,0);
         OsdWrite(5, "", 0,0);
@@ -1712,11 +1712,20 @@ void HandleUI(void)
             }
             else if (menusub == 2)
             {
-                if (config.chipset & CONFIG_ECS)
-                   config.chipset &= ~(CONFIG_ECS|CONFIG_A1000);
-                else
-                    config.chipset += CONFIG_A1000;
-
+              switch(config.chipset&0x1c) {
+                case 0:
+                  config.chipset = (config.chipset&3) | CONFIG_A1000;
+                  break;
+                case CONFIG_A1000:
+                  config.chipset = (config.chipset&3) | CONFIG_ECS;
+                  break;
+                case CONFIG_ECS:
+                  config.chipset = (config.chipset&3) | CONFIG_AGA | CONFIG_ECS;
+                  break;
+                case (CONFIG_AGA|CONFIG_ECS):
+                  config.chipset = (config.chipset&3) | 0;
+                  break;
+              }
                 menustate = MENU_SETTINGS_CHIPSET1;
                 ConfigChipset(config.chipset);
             }

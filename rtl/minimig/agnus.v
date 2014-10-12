@@ -185,6 +185,7 @@ module agnus
 	input	ntsc,						// chip is NTSC
 	input	a1k,						// enable A1000 OCS features
 	input	ecs,						// enable ECS features
+  input aga,            // enables AGA features
 	input	floppy_speed,				// allocates refresh slots for disk DMA
 	input	turbo						// alows blitter to take extra DMA slots
 );
@@ -547,6 +548,7 @@ agnus_beamcounter	bc1
 	.reset(reset),
 	.cck(cck),
 	.ntsc(ntsc),
+  .aga(aga),
 	.ecs(ecs),
 	.a1k(a1k),
 	.data_in(data_in),

@@ -11,6 +11,7 @@ module denise_colortable
   input  wire [  9-1:1] reg_address_in,   // register adress inputs
   input  wire [ 12-1:0] data_in,          // bus data in
   input  wire [  6-1:0] select,           // colour select input
+  input  wire [  8-1:0] bplxor,           // clut address xor value
   input  wire [  3-1:0] bank,             // color bank select
   input  wire           loct,             // 12-bit pallete select
   input  wire           ehb_en,           // EHB enable
@@ -26,7 +27,7 @@ wire [ 8-1:0] wr_adr = {bank[2:0], reg_address_in[5:1]};
 wire          wr_en  = (reg_address_in[8:6] == COLORBASE[8:6]) && clk7_en;
 wire [32-1:0] wr_dat = {4'b0, data_in[11:0], 4'b0, data_in[11:0]};
 wire [ 4-1:0] wr_bs  = loct ? 4'b0011 : 4'b1111;
-wire [ 8-1:0] rd_adr = {3'b000, select[4:0]}; // TODO
+wire [ 8-1:0] rd_adr = {3'b000, select[4:0]} ^ bplxor; // TODO
 wire [32-1:0] rd_dat;
 
 denise_colortable_ram_mf clut

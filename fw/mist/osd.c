@@ -768,7 +768,7 @@ void ConfigChipset(unsigned char chipset)
     EnableOsd();
     //SPI(OSDCMDCFGCHP | (chipset & 0x0F));
     SPI(OSD_CMD_CHIP);
-    SPI(chipset & 0x0f);
+    SPI(chipset & 0x1f);
     DisableOsd();
 }
 

@@ -84,20 +84,22 @@ module denise
   output   [7:0] red,         // red componenent video out
   output   [7:0] green,        // green component video out
   output   [7:0] blue,        // blue component video out
-  input  ecs,          // enables ECS chipset features
   input a1k,          // control EHB chipset feature
+  input  ecs,          // enables ECS chipset features
+  input aga,          // enables AGA features
   output  hires        // hires
 );
 
 
 //register names and adresses
-parameter DIWSTRT  = 9'h08E;
+parameter DIWSTRT  = 9'h08e;
 parameter DIWSTOP  = 9'h090;
-parameter DIWHIGH  = 9'h1E4;
+parameter DIWHIGH  = 9'h1e4;
 parameter BPLCON0  = 9'h100;
 parameter BPLCON2  = 9'h104;
 parameter BPLCON3  = 9'h106;
-parameter DENISEID = 9'h07C;
+parameter BPLCON4  = 9'h10c;
+parameter DENISEID = 9'h07c;
 parameter BPL1DAT  = 9'h110;
 
 //local signals
@@ -244,6 +246,25 @@ assign zdclken  = bplcon3[2] & ecsena;
 assign brdsprt  = bplcon3[1] & ecsena;
 assign extblken = bplcon3[0] & ecsena;
 
+// BPLCON4 register
+reg  [16-1:0] bplcon4;    // bplcon3 register
+wire [ 8-1:0] bplxor;     // color select xor value
+wire [ 4-1:0] esprm;      // even sprites 4 MSB color table address // TODO what is this?
+wire [ 4-1:0] osprm;      // odd sprites 4 MSB color table address  // TODO what is this?
+
+always @(posedge clk) begin
+  if (clk7_en) begin
+    if (reset)
+      bplcon4 <= 16'h0011;
+    else if (reg_address_in[8:1]==BPLCON4[8:1])
+      bplcon4[15:0] <= data_in[15:0];
+  end
+end
+
+assign bplxor   = bplcon4[15:8];
+assign esprm    = bplcon3[7:4];
+assign osprm    = bplcon3[3:0];
+
 // DIWSTART and DIWSTOP registers (vertical and horizontal limits of display window)
 
 // HDIWSTRT
@@ -276,7 +297,7 @@ always @(posedge clk)
       hdiwstop[8] <= data_in[13];
   end
 
-assign deniseid_out = reg_address_in[8:1]==DENISEID[8:1] ? ecs ? 16'hFF_FC : 16'hFF_FF : 16'h00_00;
+assign deniseid_out = reg_address_in[8:1]==DENISEID[8:1] ? aga ? 16'hfff8 : ecs ? 16'hfffc : 16'hffff : 16'h0000;
 
 //--------------------------------------------------------------------------------------
 
@@ -319,6 +340,8 @@ assign bpldata[3] = l_bpu > 2 ? bpldata_out[3] : 1'b0;
 assign bpldata[4] = l_bpu > 3 ? bpldata_out[4] : 1'b0;
 assign bpldata[5] = l_bpu > 4 ? bpldata_out[5] : 1'b0;
 assign bpldata[6] = l_bpu > 5 ? bpldata_out[6] : 1'b0;
+//assign bpldata[7] = l_bpu > 6 ? bpldata_out[7] : 1'b0;
+//assign bpldata[8] = l_bpu > 7 ? bpldata_out[8] : 1'b0;
 
 // instantiate playfield module
 denise_playfields plfm0
@@ -366,6 +389,7 @@ denise_colortable clut0
   .reg_address_in(reg_address_in),
   .data_in(data_in[11:0]),
   .select(clut_data),
+  .bplxor(bplxor),
   .bank(bank),
   .loct(loct),
   .ehb_en(ehb_en),

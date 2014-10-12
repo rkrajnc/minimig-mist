@@ -240,6 +240,8 @@ module minimig
 
 	parameter [0:0] NTSC = 1'b0;	//Agnus type (PAL/NTSC)
 
+  wire aga = 1'b1;
+
 //--------------------------------------------------------------------------------------
 
 //local signals for data bus
@@ -365,7 +367,7 @@ wire	cpu_speed;				//requests CPU to switch speed mode
 wire	turbo;					//CPU is working in turbo mode
 wire	[5:0] memory_config;	//memory configuration
 wire	[3:0] floppy_config;	//floppy drives configuration (drive number and speed)
-wire	[3:0] chipset_config;	//chipset features selection
+wire	[4:0] chipset_config;	//chipset features selection
 wire	[2:0] ide_config;		//HDD & HDC config: bit #0 enables Gayle, bit #1 enables Master drive, bit #2 enables Slave drive
 
 //gayle stuff
@@ -472,7 +474,8 @@ agnus AGNUS1
 	.bls(bls),
 	.ntsc(ntsc),
   .a1k(chipset_config[2]),
-	.ecs(chipset_config[3]),
+	.ecs(|chipset_config[4:3]),
+  .aga(chipset_config[4]),
 	.floppy_speed(floppy_config[0]),
 	.turbo(turbo)
 );
@@ -619,8 +622,9 @@ denise DENISE1
 	.red(red_i),
 	.green(green_i),
 	.blue(blue_i),
-  .ecs(chipset_config[3]),
   .a1k(chipset_config[2]),
+  .ecs(|chipset_config[4:3]),
+  .aga(chipset_config[4]),
 	.hires(hires)
 );
 
@@ -764,7 +768,7 @@ minimig_bankmapper BMAP1
 	.kick(sel_kick),
 	.cart(sel_cart),
 	.aron(aron),
-  .ecs(chipset_config[3]),
+  .ecs(|chipset_config[4:3]),
 	.memory_config(memory_config[3:0]),
 	.bank(bank)
 );
@@ -842,7 +846,7 @@ gary GARY1
 	.ram_rd(ram_rd),
 	.ram_hwr(ram_hwr),
 	.ram_lwr(ram_lwr),
-  .ecs(chipset_config[3]),
+  .ecs(|chipset_config[4:3]),
   .a1k(chipset_config[2]),
 	.sel_chip(sel_chip),
 	.sel_slow(sel_slow),
