@@ -6,20 +6,23 @@ module denise_collision
 	input 	clk,					// 28MHz clock
   input clk7_en,
 	input	reset,					//reset
+  input aga,        // aga enabled
 	input 	[8:1] reg_address_in,	//register adress inputs
 	input 	[15:0] data_in,			//bus data in
 	output	[15:0] data_out,		//bus data out
 	input	dblpf,				//dual playfield signal, required to support undocumented feature
-	input	[5:0] bpldata,			//bitplane serial video data in
+	input	[7:0] bpldata,			//bitplane serial video data in
 	input	[7:0] nsprite
 );
 
 //register names and adresses
-parameter CLXCON = 9'h098;
-parameter CLXDAT = 9'h00E;
+parameter CLXCON  = 9'h098;
+parameter CLXCON2 = 9'h10e;
+parameter CLXDAT  = 9'h00e;
 
 //local signals
 reg		[15:0] clxcon;			//collision detection control register
+reg   [15:0] clxcon2;     // collision reg 2
 reg		[14:0] clxdat;			//collision detection data register
 wire	[3:0] sprmatch;			//sprite group matches clxcon settings
 wire	oddmatch;				//odd bitplane data matches clxcon settings
@@ -32,23 +35,32 @@ always @(posedge clk)
   if (clk7_en) begin
   	if (reset) //reset to safe value
   		clxcon <= 16'h0fff;
-  	else if (reg_address_in[8:1]==CLXCON[8:1])
+  	else if (reg_address_in[8:1] == CLXCON[8:1])
   		clxcon <= data_in;
   end
+
+always @ (posedge clk) begin
+  if (clk7_en) begin
+    if (reset || (reg_address_in[8:1] == CLXCON[8:1]))
+      clxcon2 <= #1 16'h0000;
+    else if (aga && (reg_address_in[8:1] == CLXCON2[8:1]))
+      clxcon2 <= #1 data_in;
+  end
+end
 
 //--------------------------------------------------------------------------------------
 
 //generate bitplane match signal
-wire [5:0] bm;
-assign bm = (bpldata[5:0] ^ ~clxcon[5:0]) | (~clxcon[11:6]); // JB: playfield collision detection fix
+wire [7:0] bm;
+assign bm = (bpldata[7:0] ^ ~{clxcon2[1:0],clxcon[5:0]}) | (~{clxcon2[7:6],clxcon[11:6]}); // JB: playfield collision detection fix
 
 // this is the implementation of an undocumented function in the real Denise chip, developed by Yaqube.
 // trigger was the game Rotor. mentioned in WinUAE sources to be the only known game needing this feature.
 // it also fixes the Spaceport instandly helicopter crash at takeoff
 // and Archon-1 'sticky effect' of player sprite at the battlefield.
 // the OCS mystery is cleaning up :)
-assign oddmatch = bm[4] & bm[2] & bm[0] & (dblpf | evenmatch);
-assign evenmatch = bm[5] & bm[3] & bm[1];
+assign oddmatch = bm[6] & bm[4] & bm[2] & bm[0] & (dblpf | evenmatch);
+assign evenmatch = bm[7] & bm[5] & bm[3] & bm[1];
 
 //generate sprite group match signal
 /*assign sprmatch[0] = (nsprite[0] | (nsprite[1]) & clxcon[12]);*/

@@ -109,16 +109,16 @@ reg    [3:0] l_bpu;      // latched bitplane enable
 reg    [8:0] hdiwstrt;      // horizontal display window start position
 reg    [8:0] hdiwstop;      // horizontal display window stop position
 
-wire  [6:1] bpldata_out;    // bitplane serial data out from shifters
-wire  [6:1] bpldata;      // raw bitplane serial video data
+wire  [8:1] bpldata_out;    // bitplane serial data out from shifters
+wire  [8:1] bpldata;      // raw bitplane serial video data
 wire  [3:0] sprdata;      // sprite serial video data
-wire  [5:0] plfdata;      // playfield serial video data
+wire  [7:0] plfdata;      // playfield serial video data
 wire  [2:1] nplayfield;    // playfield 1,2 valid data signals
 wire  [7:0] nsprite;      // sprite 0-7 valid data signals
 wire  sprsel;          // sprite select
 
 wire  [11:0] ham_rgb;      // hold and modify mode RGB video data
-reg    [5:0] clut_data;    // colour table colour select in
+reg    [7:0] clut_data;    // colour table colour select in
 reg    window;          // window enable signal
 
 wire  [15:0] deniseid_out;   // deniseid data_out
@@ -230,15 +230,15 @@ wire          extblken;   // causes blank output to be programmable; disabled wh
 always @(posedge clk) begin
   if (clk7_en) begin
     if (reset)
-      bplcon3 <= 16'h00_00;
-    else if (reg_address_in[8:1]==BPLCON3[8:1])
+      bplcon3 <= 16'h0c00;
+    else if (reg_address_in[8:1] == BPLCON3[8:1])
       bplcon3[15:0] <= data_in[15:0];
   end
 end
 
-assign bank     = bplcon3[15:13];
+assign bank     = bplcon3[15:13] & {3{aga}};
 assign pf2of    = bplcon3[12:10];
-assign loct     = bplcon3[9];
+assign loct     = bplcon3[9] & aga;
 assign spres    = bplcon3[7:6];
 assign brdrblnk = bplcon3[5] & ecsena;
 assign brdntran = bplcon3[4] & ecsena;
@@ -256,7 +256,7 @@ always @(posedge clk) begin
   if (clk7_en) begin
     if (reset)
       bplcon4 <= 16'h0011;
-    else if (reg_address_in[8:1]==BPLCON4[8:1])
+    else if (aga && (reg_address_in[8:1] == BPLCON4[8:1]))
       bplcon4[15:0] <= data_in[15:0];
   end
 end
@@ -297,7 +297,7 @@ always @(posedge clk)
       hdiwstop[8] <= data_in[13];
   end
 
-assign deniseid_out = reg_address_in[8:1]==DENISEID[8:1] ? aga ? 16'hfff8 : ecs ? 16'hfffc : 16'hffff : 16'h0000;
+assign deniseid_out = reg_address_in[8:1]==DENISEID[8:1] ? aga ? 16'h00f8 : ecs ? 16'hfffc : 16'hffff : 16'h0000;
 
 //--------------------------------------------------------------------------------------
 
@@ -340,20 +340,22 @@ assign bpldata[3] = l_bpu > 2 ? bpldata_out[3] : 1'b0;
 assign bpldata[4] = l_bpu > 3 ? bpldata_out[4] : 1'b0;
 assign bpldata[5] = l_bpu > 4 ? bpldata_out[5] : 1'b0;
 assign bpldata[6] = l_bpu > 5 ? bpldata_out[6] : 1'b0;
-//assign bpldata[7] = l_bpu > 6 ? bpldata_out[7] : 1'b0;
-//assign bpldata[8] = l_bpu > 7 ? bpldata_out[8] : 1'b0;
+assign bpldata[7] = l_bpu > 6 ? bpldata_out[7] : 1'b0;
+assign bpldata[8] = l_bpu > 7 ? bpldata_out[8] : 1'b0;
 
 // instantiate playfield module
 denise_playfields plfm0
 (
   .bpldata(bpldata),
   .dblpf(dpf),
+  .pf2of(pf2of),
   .bplcon2(bplcon2[6:0]),
   .nplayfield(nplayfield),
   .plfdata(plfdata)
 );
 
 // instantiate sprite module
+// TODO
 denise_sprites sprm0
 (
   .clk(clk),
@@ -397,6 +399,7 @@ denise_colortable clut0
 );
 
 // instantiate HAM (hold and modify) module
+/* TODO
 denise_hamgenerator ham0
 (
   .clk(clk),
@@ -408,6 +411,7 @@ denise_hamgenerator ham0
 //  .loct(loct),
   .rgb(ham_rgb)
 );
+*/
 
 // instantiate collision detection module
 denise_collision col0
@@ -415,6 +419,7 @@ denise_collision col0
   .clk(clk),
   .clk7_en(clk7_en),
   .reset(reset),
+  .aga(aga),
   .reg_address_in(reg_address_in),
   .data_in(data_in),
   .data_out(col_out),
@@ -427,9 +432,9 @@ denise_collision col0
 always @(*)
 begin
   if (!window_ena) // we are outside of the visible window region, display border colour
-    clut_data = 6'b000000;
+    clut_data = 8'b000000;
   else if (sprsel) // select sprites
-    clut_data = {2'b01,sprdata[3:0]};
+    clut_data = {2'b00,2'b01,sprdata[3:0]};
   else // select playfield
     clut_data = plfdata;
 end
@@ -444,7 +449,7 @@ begin
 end
 
 // ham_rgb / clut_rgb multiplexer
-wire  [24-1:0] out_rgb  = ham && window_del && !sprsel_del ? {ham_rgb,ham_rgb}/*TODO*/ : clut_rgb; //if no HAM mode, always select normal (table selected) rgb data
+wire  [24-1:0] out_rgb  = /*ham && window_del && !sprsel_del ? {ham_rgb,ham_rgb}TODO :*/ clut_rgb; //if no HAM mode, always select normal (table selected) rgb data
 
 //--------------------------------------------------------------------------------------
 

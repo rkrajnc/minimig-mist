@@ -393,7 +393,7 @@ always @(*)
 		plane = {~ddfseq[0],~ddfseq[1],~ddfseq[2]};
 
 // corrected number of selected planes
-assign planes = bpu[2:0]==3'b111 ? 3'b100 : bpu[2:0];
+// UNUSED! assign planes = bpu[2:0]==3'b111 ? 3'b100 : bpu[2:0];
 
 // generate dma signal
 // for a dma to happen plane must be less than BPU, dma must be enabled and data fetch must be true

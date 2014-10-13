@@ -240,8 +240,6 @@ module minimig
 
 	parameter [0:0] NTSC = 1'b0;	//Agnus type (PAL/NTSC)
 
-  wire aga = 1'b1;
-
 //--------------------------------------------------------------------------------------
 
 //local signals for data bus

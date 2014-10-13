@@ -46,7 +46,7 @@ module denise_bitplanes
 	input 	hires,		   			// high resolution mode select
 	input 	shres,		   			// super high resolution mode select
 	input	[8:0] hpos,				// horizontal position (70ns resolution)
-	output 	[6:1] bpldata			// bitplane data out
+	output 	[8:1] bpldata			// bitplane data out
 );
 //register names and adresses
 parameter BPLCON1 = 9'h102;  		
@@ -56,6 +56,8 @@ parameter BPL3DAT = 9'h114;
 parameter BPL4DAT = 9'h116;
 parameter BPL5DAT = 9'h118;
 parameter BPL6DAT = 9'h11a;
+parameter BPL7DAT = 9'h11c;
+parameter BPL8DAT = 9'h11e;
 
 //local signals
 reg 	[7:0] bplcon1;		// bplcon1 register
@@ -65,6 +67,8 @@ reg		[15:0] bpl3dat;		// buffer register for bit plane 3
 reg		[15:0] bpl4dat;		// buffer register for bit plane 4
 reg		[15:0] bpl5dat;		// buffer register for bit plane 5
 reg		[15:0] bpl6dat;		// buffer register for bit plane 6
+reg		[15:0] bpl7dat;		// buffer register for bit plane 5
+reg		[15:0] bpl8dat;		// buffer register for bit plane 6
 reg		load;				// bpl1dat written => load shif registers
 
 reg		[3:0] extra_delay;	// extra delay when not alligned ddfstart
@@ -114,7 +118,7 @@ always @(posedge clk)
 //writing bplcon1 register : horizontal scroll codes for even and odd bitplanes
 always @(posedge clk)
   if (clk7_en) begin
-  	if (reg_address_in[8:1]==BPLCON1[8:1])
+  	if (reg_address_in[8:1] == BPLCON1[8:1])
   		bplcon1 <= data_in[7:0];
   end
 
@@ -123,49 +127,63 @@ always @(posedge clk)
 //bitplane buffer register for plane 1
 always @(posedge clk)
   if (clk7_en) begin
-  	if (reg_address_in[8:1]==BPL1DAT[8:1])
+  	if (reg_address_in[8:1] == BPL1DAT[8:1])
   		bpl1dat <= data_in[15:0];
   end
 		
 //bitplane buffer register for plane 2
 always @(posedge clk)
   if (clk7_en) begin
-  	if (reg_address_in[8:1]==BPL2DAT[8:1])
+  	if (reg_address_in[8:1] == BPL2DAT[8:1])
   		bpl2dat <= data_in[15:0];
   end
 
 //bitplane buffer register for plane 3
 always @(posedge clk)
   if (clk7_en) begin
-  	if (reg_address_in[8:1]==BPL3DAT[8:1])
+  	if (reg_address_in[8:1] == BPL3DAT[8:1])
   		bpl3dat <= data_in[15:0];
   end
 
 //bitplane buffer register for plane 4
 always @(posedge clk)
   if (clk7_en) begin
-  	if (reg_address_in[8:1]==BPL4DAT[8:1])
+  	if (reg_address_in[8:1] == BPL4DAT[8:1])
   		bpl4dat <= data_in[15:0];
   end
 
 //bitplane buffer register for plane 5
 always @(posedge clk)
   if (clk7_en) begin
-  	if (reg_address_in[8:1]==BPL5DAT[8:1])
+  	if (reg_address_in[8:1] == BPL5DAT[8:1])
   		bpl5dat <= data_in[15:0];
   end
 
 //bitplane buffer register for plane 6
 always @(posedge clk)
   if (clk7_en) begin
-  	if (reg_address_in[8:1]==BPL6DAT[8:1])
+  	if (reg_address_in[8:1] == BPL6DAT[8:1])
   		bpl6dat <= data_in[15:0];
+  end
+
+//bitplane buffer register for plane 7
+always @(posedge clk)
+  if (clk7_en) begin
+  	if (reg_address_in[8:1] == BPL7DAT[8:1])
+  		bpl7dat <= data_in[15:0];
+  end
+
+//bitplane buffer register for plane 8
+always @(posedge clk)
+  if (clk7_en) begin
+  	if (reg_address_in[8:1] == BPL8DAT[8:1])
+  		bpl8dat <= data_in[15:0];
   end
 
 //generate load signal when plane 1 is written
 always @(posedge clk)
   if (clk7_en) begin
-  	load <= reg_address_in[8:1]==BPL1DAT[8:1] ? 1'b1 : 1'b0;
+  	load <= reg_address_in[8:1] == BPL1DAT[8:1] ? 1'b1 : 1'b0;
   end
 
 //--------------------------------------------------------------------------------------
@@ -255,6 +273,35 @@ denise_bitplane_shifter bplshft6
 	.scroll(pf2h_del),
 	.out(bpldata[6])	
 );
+
+denise_bitplane_shifter bplshft7
+(	
+	.clk(clk),
+  .clk7_en(clk7_en),
+	.c1(c1),
+	.c3(c3),
+	.load(load),
+	.hires(hires),
+	.shres(shres),
+	.data_in(bpl7dat),
+	.scroll(pf1h_del),
+	.out(bpldata[7])	
+);
+
+denise_bitplane_shifter bplshft8
+(	
+	.clk(clk),
+  .clk7_en(clk7_en),
+	.c1(c1),
+	.c3(c3),
+	.load(load),
+	.hires(hires),
+	.shres(shres),
+	.data_in(bpl8dat),
+	.scroll(pf2h_del),
+	.out(bpldata[8])	
+);
+
 
 endmodule
 
