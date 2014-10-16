@@ -6,6 +6,7 @@ module agnus_bitplanedma
 	input 	clk,		    			// bus clock
   input clk7_en,
 	input	reset,						// reset
+  input aga,              // aga config
 	input	ecs,						// ddfstrt/ddfstop ECS bits enable
   input a1k,              // DIP Agnus feature
   input sof,              // start of frame
@@ -32,6 +33,7 @@ localparam DDFSTOP   = 9'h094;
 localparam BPL1MOD   = 9'h108;
 localparam BPL2MOD   = 9'h10a;
 localparam BPLCON0   = 9'h100;
+localparam FMODE     = 9'h1fc;
 
 // local signals
 reg		[8:2] ddfstrt;				// display data fetch start
@@ -41,6 +43,7 @@ reg		[15:1] bpl2mod;				// modulo for even bitplanes
 reg		[5:0] bplcon0;				// bitplane control (SHRES, HIRES and BPU bits)
 reg		[5:0] bplcon0_delayed;		// delayed bplcon0 (compatibility)
 reg		[5:0] bplcon0_delay [1:0];
+reg   [15:0] fmode;
 
 wire 	hires;						// bplcon0 - high resolution display mode
 wire	shres;						// bplcon0 - super high resolution display mode
@@ -49,8 +52,7 @@ wire	[3:0] bpu;					// bplcon0 - selected number of bitplanes
 reg		[20:1] newpt;				// new pointer
 reg 	[20:16] bplpth [7:0];		// upper 5 bits bitplane pointers
 reg 	[15:1] bplptl [7:0];		// lower 16 bits bitplane pointers
-reg		[2:0] plane;				// plane pointer select
-wire	[2:0] planes;				// selected number of planes
+reg		[4:0] plane;				// plane pointer select
 
 wire	mod;						// end of data fetch, add modulo
 
@@ -59,7 +61,7 @@ reg 	softena;					// software display data fetch enable
 reg 	ddfena;						// combined display data fetch
 reg   ddfena_0;
 
-reg 	[2:0] ddfseq;				// bitplane DMA fetch cycle sequencer
+reg 	[4:0] ddfseq;				// bitplane DMA fetch cycle sequencer
 reg 	ddfrun;						// set when display dma fetches data
 reg		ddfend;						// indicates the last display data fetch sequence
 
@@ -142,7 +144,7 @@ always @(posedge clk)
 
 wire	[2:0] bplptr_sel;	// bitplane pointer select
 
-assign bplptr_sel = dma ? plane : reg_address_in[4:2];
+assign bplptr_sel = dma ? plane[2:0] : reg_address_in[4:2];
 
 // high word pointer register bank (implemented using distributed ram)
 wire [20:16] bplpth_in;
@@ -155,7 +157,7 @@ always @(posedge clk)
   		bplpth[bplptr_sel] <= bplpth_in;
   end
 
-assign address_out[20:16] = bplpth[plane];
+assign address_out[20:16] = bplpth[plane[2:0]];
 
 // low word pointer register bank (implemented using distributed ram)
 wire [15:1] bplptl_in;
@@ -168,7 +170,7 @@ always @(posedge clk)
   		bplptl[bplptr_sel] <= bplptl_in;
   end
 
-assign address_out[15:1] = bplptl[plane];
+assign address_out[15:1] = bplptl[plane[2:0]];
 
 //--------------------------------------------------------------------------------------
 
@@ -223,23 +225,27 @@ always @(posedge clk) begin
   end
 end
 
-//// delayed BPLCON0 by 3 CCKs
-//   SRL16E #(
-//      .INIT(16'h0000)
-//   ) BPLCON0_DELAY [5:0] (
-//      .Q(bplcon0_delayed),
-//      .A0(GND),
-//      .A1(VCC),
-//      .A2(GND),
-//      .A3(GND),
-//      .CE(hpos[0]),
-//      .CLK(clk),
-//      .D(bplcon0)
-//   );
-
 assign shres = ecs & bplcon0_delayed[5];
 assign hires = bplcon0_delayed[4];
 assign bpu = bplcon0_delayed[3:0];
+
+// fmode
+wire bp_fmode0;
+wire bp_fmode12;
+wire bp_fmode3;
+
+always @ (posedge clk) begin
+  if (clk7_en) begin
+    if (reset)
+      fmode <= #1 16'h0000;
+    else if (aga && (reg_address_in[8:1] == FMODE[8:1]))
+      fmode <= #1 data_in;
+  end
+end
+
+assign bp_fmode0  = (fmode[1:0] == 2'b00);
+assign bp_fmode12 = (fmode[1:0] == 2'b01) || (fmode[1:0] == 2'b10);
+assign bp_fmode3  = (fmode[1:0] == 2'b11);
 
 // bitplane dma enable bit delayed by 4 CCKs
 always @(posedge clk)
@@ -337,26 +343,13 @@ always @(posedge clk) begin
   end
 end
 
-//SRL16E #(
-//      .INIT(16'h0000)
-//   ) DDFENA_DELAY (
-//      .Q(ddfena),
-//      .A0(VCC),
-//      .A1(GND),
-//      .A2(GND),
-//      .A3(GND),
-//      .CE(hpos[0]),
-//      .CLK(clk),
-//      .D(hardena & softena)
-//   );
-
 // this signal enables bitplane DMA sequencer
 always @(posedge clk)
   if (clk7_en) begin
   	if (hpos[0]) //cycle alligment
   		if (ddfena && vdiwena && !hpos[1] && dmaena_delayed[0]) // bitplane DMA starts at odd timeslot
   			ddfrun <= 1;
-  		else if ((ddfend || !vdiwena) && ddfseq==7) // cleared at the end of last bitplane DMA cycle
+  		else if ((ddfend || !vdiwena) && ddfseq[2:0]==7) // cleared at the end of last bitplane DMA cycle
   			ddfrun <= 0;
   end
 
@@ -373,7 +366,7 @@ always @(posedge clk)
 // the last sequence of the bitplane DMA (time to add modulo)
 always @(posedge clk)
   if (clk7_en) begin
-  	if (hpos[0] && ddfseq==7)
+  	if (hpos[0] && ddfseq[2:0]==7)
   		if (ddfend) // cleared if set
   			ddfend <= 0;
   		else if (!ddfena) // set during the last bitplane dma sequence
@@ -381,23 +374,24 @@ always @(posedge clk)
   end
 
 // signal for adding modulo to the bitplane pointers
-assign mod = shres ? ddfend & ddfseq[2] & ddfseq[1] : hires ? ddfend & ddfseq[2] : ddfend;
+assign mod = (shres && bp_fmode0) ? ddfend & ddfseq[2] & ddfseq[1] : ((hires && bp_fmode0) || (shres && bp_fmode12)) ? ddfend & ddfseq[2] : ddfend;
 
 // plane number encoder
 always @(*)
-	if (shres) // super high resolution (35ns pixel clock)
-		plane = {2'b00,~ddfseq[0]};
-	else if (hires) // high resolution (70ns pixel clock)
-		plane = {1'b0,~ddfseq[0],~ddfseq[1]};
-	else // low resolution (140ns pixel clock)
-		plane = {~ddfseq[0],~ddfseq[1],~ddfseq[2]};
-
-// corrected number of selected planes
-// UNUSED! assign planes = bpu[2:0]==3'b111 ? 3'b100 : bpu[2:0];
+	if (shres && bp_fmode0) // shres+fmode0, up to 2bpls
+		plane = {4'b0000,~ddfseq[0]};
+	else if ((hires && bp_fmode0) || (shres && bp_fmode12)) // hires+fmode0 or shres+fmode12, up to 4 bpls
+		plane = {3'b000,~ddfseq[0],~ddfseq[1]};
+	else if ((!shres && !hires && bp_fmode0) || (hires && bp_fmode12) || (shres && bp_fmode3)) // lores+fmode0 or hires+fmode12 or shres+fmode3, up to 8 bpls
+		plane = {2'b00,~ddfseq[0],~ddfseq[1],~ddfseq[2]};
+	else if ((!shres && !hires && bp_fmode12) || (hires && bp_fmode3)) // lores+fmode12 or hires+fmode3, up to 8 bpls, 8 free cycles
+		plane = {1'b0,ddfseq[3],~ddfseq[0],~ddfseq[1],~ddfseq[2]};
+  else // lores+fmode3, up to 8 bpls, 24 free cycles
+    plane = {ddfseq[4],ddfseq[3],~ddfseq[0],~ddfseq[1],~ddfseq[2]};
 
 // generate dma signal
 // for a dma to happen plane must be less than BPU, dma must be enabled and data fetch must be true
-assign dma = ddfrun && dmaena_delayed[1] && hpos[0] && (plane[2:0] < bpu[2:0]) ? 1'b1 : 1'b0;
+assign dma = (ddfrun) && dmaena_delayed[1] && hpos[0] && (plane[4:0] < {1'b0,bpu[3:0]}) ? 1'b1 : 1'b0;
 
 //--------------------------------------------------------------------------------------
 
@@ -406,17 +400,17 @@ always @(*)
 	if (mod)
 	begin
 		if (plane[0]) // even plane modulo
-			newpt[20:1] = address_out[20:1] + {{5{bpl2mod[15]}},bpl2mod[15:1]} + 1'b1;
+			newpt[20:1] = address_out[20:1] + {{5{bpl2mod[15]}},bpl2mod[15:1]} + (fmode[1:0] == 2'b11 ? 3'd4 : fmode[1:0] == 2'b00 ? 3'd1 : 3'd2);
 		else // odd plane modulo
-			newpt[20:1] = address_out[20:1] + {{5{bpl1mod[15]}},bpl1mod[15:1]} + 1'b1;
+			newpt[20:1] = address_out[20:1] + {{5{bpl1mod[15]}},bpl1mod[15:1]} + (fmode[1:0] == 2'b11 ? 3'd4 : fmode[1:0] == 2'b00 ? 3'd1 : 3'd2);
 	end
 	else
-		newpt[20:1] = address_out[20:1] + 1'b1;
+		newpt[20:1] = address_out[20:1] + (fmode[1:0] == 2'b11 ? 3'd4 : fmode[1:0] == 2'b00 ? 3'd1 : 3'd2);
 
 // Denise bitplane shift registers address lookup table
 always @(*)
 begin
-	case (plane)
+	case (plane[2:0])
 		3'b000 : reg_address_out[8:1] = 8'h88;
 		3'b001 : reg_address_out[8:1] = 8'h89;
 		3'b010 : reg_address_out[8:1] = 8'h8A;

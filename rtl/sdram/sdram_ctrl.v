@@ -61,6 +61,7 @@ module sdram_ctrl(
   input  wire           chip_dma,
   input  wire [ 16-1:0] chipWR,
   output reg  [ 16-1:0] chipRD,
+  output wire [ 64-1:0] chip64,
   // cpu
   input  wire    [24:1] cpuAddr,
   input  wire [  6-1:0] cpustate,
@@ -357,7 +358,7 @@ assign cpuRD = cpuRD_reg;
 // chip cache
 ////////////////////////////////////////
 
-reg  [ 16-1:0] chipRDd;
+reg  [ 16-1:0] chipRDd [0:4-1];
 /*
 reg  [ 16-1:0] chip_cache_dat [0:4-1];
 reg  [ 24-1:0] chip_cache_adr;
@@ -399,8 +400,16 @@ end
 
 always @ (posedge sysclk) begin
   if ((sdram_state == ph9) && chipCycle)
-    chipRDd <= sdata_reg;
+    chipRDd[0] <= sdata_reg;
+  else if ((sdram_state == ph10) && chipCycle)
+    chipRDd[1] <= sdata_reg;
+  else if ((sdram_state == ph11) && chipCycle)
+    chipRDd[2] <= sdata_reg;
+  else if ((sdram_state == ph12) && chipCycle)
+    chipRDd[3] <= sdata_reg;
 end
+
+assign chip64 = {chipRDd[0], chipRDd[1], chipRDd[2], chipRDd[3]};
 
 // chip cache read
 always @ (*) begin
@@ -408,7 +417,7 @@ always @ (*) begin
     chipRD = chip_cache_dat[chip_cache_index];
   else
 */
-    chipRD = chipRDd;
+    chipRD = chipRDd[0];
 end
 
 

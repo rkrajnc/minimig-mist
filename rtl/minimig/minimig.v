@@ -168,6 +168,7 @@ module minimig
 	output	_ram_ble,			//sram lower byte select
 	output	_ram_we,			//sram write enable
 	output	_ram_oe,			//sram output enable
+  input [64-1:0] chip64,         // big chipram read
 	//system	pins
   input rst_ext,      // reset from ctrl block
   output rst_out,     // minimig reset status
@@ -615,6 +616,7 @@ denise DENISE1
 	.strhor(strhor_denise),
 	.reg_address_in(reg_address),
 	.data_in(custom_data_in),
+  .chip64(chip64),
 	.data_out(denise_data_out),
 	.blank(blank),
 	.red(red_i),

@@ -79,6 +79,7 @@ module denise
   input  strhor,          // horizontal strobe
   input   [8:1] reg_address_in,  // register adress inputs
   input   [15:0] data_in,      // bus data in
+  input   [64-1:0] chip64,    // big chipram read
   output   [15:0] data_out,    // bus data out
   input  blank,          // blanking input
   output   [7:0] red,         // red componenent video out
@@ -117,7 +118,7 @@ wire  [2:1] nplayfield;    // playfield 1,2 valid data signals
 wire  [7:0] nsprite;      // sprite 0-7 valid data signals
 wire  sprsel;          // sprite select
 
-wire  [11:0] ham_rgb;      // hold and modify mode RGB video data
+wire  [23:0] ham_rgb;      // hold and modify mode RGB video data
 reg    [7:0] clut_data;    // colour table colour select in
 reg    window;          // window enable signal
 
@@ -324,10 +325,13 @@ denise_bitplanes bplm0
 (
   .clk(clk),
   .clk7_en(clk7_en),
+  .reset(reset),
   .c1(c1),
   .c3(c3),
+  .aga(aga),
   .reg_address_in(reg_address_in),
   .data_in(data_in),
+  .chip64(chip64),
   .hires(hires),
   .shres(shres & ecs),
   .hpos(hpos),
@@ -382,7 +386,7 @@ denise_spritepriority spm0
 wire  [24-1:0] clut_rgb;    // colour table rgb data out
 wire           ehb_en;      // ehb enable
 
-assign ehb_en = !a1k && !killehb && !shres && !hires && !ham && !dpf && (bpu == 4'd6);
+assign ehb_en = !a1k && !killehb && !shres && !hires && !ham && !dpf && (l_bpu == 4'd6);
 
 denise_colortable clut0
 (
@@ -399,19 +403,21 @@ denise_colortable clut0
 );
 
 // instantiate HAM (hold and modify) module
-/* TODO
+wire ham8 = ham && (l_bpu == 4'd8);
+
 denise_hamgenerator ham0
 (
   .clk(clk),
   .clk7_en(clk7_en),
   .reg_address_in(reg_address_in),
   .data_in(data_in[11:0]),
-  .bpldata(bpldata),
-//  .bank(bank),
-//  .loct(loct),
+  .select(bpldata),
+  .bplxor(bplxor),
+  .bank(bank),
+  .loct(loct),
+  .ham8(ham8),
   .rgb(ham_rgb)
 );
-*/
 
 // instantiate collision detection module
 denise_collision col0
@@ -449,7 +455,7 @@ begin
 end
 
 // ham_rgb / clut_rgb multiplexer
-wire  [24-1:0] out_rgb  = /*ham && window_del && !sprsel_del ? {ham_rgb,ham_rgb}TODO :*/ clut_rgb; //if no HAM mode, always select normal (table selected) rgb data
+wire  [24-1:0] out_rgb  = ham && window_del && !sprsel_del ? ham_rgb : clut_rgb; //if no HAM mode, always select normal (table selected) rgb data
 
 //--------------------------------------------------------------------------------------
 

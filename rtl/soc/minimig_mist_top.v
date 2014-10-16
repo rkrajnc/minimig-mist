@@ -110,6 +110,7 @@ wire [ 32-1:0] tg68_VBR_out;
 wire           led;
 wire [ 16-1:0] ram_data;      // sram data bus
 wire [ 16-1:0] ramdata_in;    // sram data bus in
+wire [ 64-1:0] chip64;        // big chip read
 wire [ 22-1:1] ram_address;   // sram address bus
 wire           _ram_bhe;      // sram upper byte select
 wire           _ram_ble;      // sram lower byte select
@@ -288,6 +289,7 @@ sdram_ctrl sdram (
   .chip_dma     (_ram_oe          ),
   .chipWR       (ram_data         ),
   .chipRD       (ramdata_in       ),
+  .chip64       (chip64           ),
   // cpu
   .cpuAddr      (tg68_cad[24:1]   ),
   .cpustate     (tg68_cpustate    ),
@@ -357,6 +359,7 @@ minimig minimig (
   ._ram_ble     (_ram_ble         ), // SRAM lower byte select
   ._ram_we      (_ram_we          ), // SRAM write enable
   ._ram_oe      (_ram_oe          ), // SRAM output enable
+  .chip64       (chip64           ), // big chipram read
   //system  pins
   .rst_ext      (rst_minimig      ), // reset from ctrl block
   .rst_out      (                 ), // minimig reset status
