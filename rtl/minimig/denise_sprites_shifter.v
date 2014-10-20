@@ -14,6 +14,8 @@ module denise_sprites_shifter
 	input	aen,					// address enable
 	input	[1:0] address,		   	// register address input
 	input	[8:0] hpos,				// horizontal beam counter
+  input [15:0] fmode,
+  input [63:0] chip64,
 	input 	[15:0] data_in, 		// bus data in
 	output	[1:0] sprdata,			// serialized sprite data out
 	output	reg attach				// sprite is attached
@@ -26,16 +28,27 @@ parameter DATA = 2'b10;
 parameter DATB = 2'b11;  		
 
 // local signals
-reg		[15:0] datla;		// data register A
-reg		[15:0] datlb;		// data register B
-reg		[15:0] shifta;		// shift register A
-reg		[15:0] shiftb;		// shift register B
+reg		[63:0] datla;		// data register A
+reg		[63:0] datlb;		// data register B
+reg		[63:0] shifta;		// shift register A
+reg		[63:0] shiftb;		// shift register B
 reg		[8:0] hstart;		// horizontal start value
 reg		armed;				// sprite "armed" signal
 reg		load;				// load shift register signal
 reg		load_del;
 
 //--------------------------------------------------------------------------------------
+
+// switch data according to fmode
+reg  [64-1:0] spr_fmode_dat;
+
+always @ (*) begin
+  case(fmode[3:2])
+    2'b00   : spr_fmode_dat = {chip64[63:48], 48'h000000000000};
+    2'b11   : spr_fmode_dat = chip64[63:0];
+    default : spr_fmode_dat = {chip64[63:32], 32'h00000000};
+  endcase
+end
 
 // generate armed signal
 always @(posedge clk)
@@ -81,14 +94,14 @@ always @(posedge clk)
 always @(posedge clk)
   if (clk7_en) begin
   	if (aen && address==DATA)
-  		datla[15:0] <= data_in[15:0];
+  		datla[63:0] <= spr_fmode_dat;
   end
 
 // data register B
 always @(posedge clk)
   if (clk7_en) begin
   	if (aen && address==DATB)
-  		datlb[15:0] <= data_in[15:0];
+  		datlb[63:0] <= spr_fmode_dat;
   end
 
 //--------------------------------------------------------------------------------------
@@ -98,18 +111,18 @@ always @(posedge clk)
   if (clk7_en) begin
   	if (load_del) // load new data into shift register
   	begin
-  		shifta[15:0] <= datla[15:0];
-  		shiftb[15:0] <= datlb[15:0];
+  		shifta[63:0] <= datla[63:0];
+  		shiftb[63:0] <= datlb[63:0];
   	end
   	else // shift out data
   	begin
-  		shifta[15:0] <= {shifta[14:0],1'b0};
-  		shiftb[15:0] <= {shiftb[14:0],1'b0};
+  		shifta[63:0] <= {shifta[62:0],1'b0};
+  		shiftb[63:0] <= {shiftb[62:0],1'b0};
   	end
   end
 
 // assign serialized output data
-assign sprdata[1:0] = {shiftb[15],shifta[15]};
+assign sprdata[1:0] = {shiftb[63],shifta[63]};
 
 //--------------------------------------------------------------------------------------
 

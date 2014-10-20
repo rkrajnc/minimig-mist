@@ -471,6 +471,8 @@ agnus_spritedma spr1
 (
 	.clk(clk),
   .clk7_en(clk7_en),
+  .reset(reset),
+  .aga(aga),
 	.ecs(ecs),
 	.reqdma(req_spr),
 	.ackdma(ack_spr),

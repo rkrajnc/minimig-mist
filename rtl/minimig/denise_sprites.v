@@ -38,16 +38,21 @@ module denise_sprites
 	input 	clk,					// 28MHz clock	
   input clk7_en,
 	input 	reset,		    		// reset
+  input aga,
 	input	[8:1] reg_address_in,	// register address input
 	input	[8:0] hpos,				// horizontal beam counter
 	input 	[15:0] data_in, 		// bus data in
+  input [63:0] chip64,
 	input	sprena,					// sprite enable signal
+  input [3:0] esprm,
+  input [3:0] osprm,
 	output 	[7:0] nsprite,		  	// sprite data valid signals 
-	output	reg [3:0] sprdata		// sprite data out
+	output	reg [7:0] sprdata		// sprite data out
 );
 
 //register names and adresses		
 parameter	SPRPOSCTLBASE = 9'h140;	//sprite data, position and control register base address
+parameter FMODE         = 9'h1fc;
 
 //local signals
 wire		selspr0;				// select sprite 0
@@ -94,6 +99,21 @@ assign selspr7 = selsprx && reg_address_in[5:3]==3'd7    ? 1'b1 : 1'b0;
 
 //--------------------------------------------------------------------------------------
 
+
+// fmode reg
+reg  [16-1:0] fmode;
+
+always @ (posedge clk) begin
+  if (clk7_en) begin
+    if (reset)
+      fmode <= #1 16'h0000;
+    else if (aga && (reg_address_in[8:1] == FMODE[8:1]))
+      fmode <= #1 data_in;
+  end
+end
+
+
+
 // instantiate sprite 0
 denise_sprites_shifter sps0
 (
@@ -103,6 +123,8 @@ denise_sprites_shifter sps0
 	.aen(selspr0),
 	.address(reg_address_in[2:1]),
 	.hpos(hpos),
+  .fmode(fmode),
+  .chip64(chip64),
 	.data_in(data_in),
 	.sprdata(sprdat0),
 	.attach(attach0)
@@ -117,6 +139,8 @@ denise_sprites_shifter sps1
 	.aen(selspr1),
 	.address(reg_address_in[2:1]),
 	.hpos(hpos),
+  .fmode(fmode),
+  .chip64(chip64),
 	.data_in(data_in),
 	.sprdata(sprdat1),
 	.attach(attach1)
@@ -131,6 +155,8 @@ denise_sprites_shifter sps2
 	.aen(selspr2),
 	.address(reg_address_in[2:1]),
 	.hpos(hpos),
+  .fmode(fmode),
+  .chip64(chip64),
 	.data_in(data_in),
 	.sprdata(sprdat2),
 	.attach(attach2)
@@ -145,6 +171,8 @@ denise_sprites_shifter sps3
 	.aen(selspr3),
 	.address(reg_address_in[2:1]),
 	.hpos(hpos),
+  .fmode(fmode),
+  .chip64(chip64),
 	.data_in(data_in),
 	.sprdata(sprdat3),
 	.attach(attach3)
@@ -159,6 +187,8 @@ denise_sprites_shifter sps4
 	.aen(selspr4),
 	.address(reg_address_in[2:1]),
 	.hpos(hpos),
+  .fmode(fmode),
+  .chip64(chip64),
 	.data_in(data_in),
 	.sprdata(sprdat4),
 	.attach(attach4)
@@ -173,6 +203,8 @@ denise_sprites_shifter sps5
 	.aen(selspr5),
 	.address(reg_address_in[2:1]),
 	.hpos(hpos),
+  .fmode(fmode),
+  .chip64(chip64),
 	.data_in(data_in),
 	.sprdata(sprdat5),
 	.attach(attach5)
@@ -187,6 +219,8 @@ denise_sprites_shifter sps6
 	.aen(selspr6),
 	.address(reg_address_in[2:1]),
 	.hpos(hpos),
+  .fmode(fmode),
+  .chip64(chip64),
 	.data_in(data_in),
 	.sprdata(sprdat6),
 	.attach(attach6)
@@ -201,6 +235,8 @@ denise_sprites_shifter sps7
 	.aen(selspr7),
 	.address(reg_address_in[2:1]),
 	.hpos(hpos),
+  .fmode(fmode),
+  .chip64(chip64),
 	.data_in(data_in),
 	.sprdata(sprdat7),
 	.attach(attach7)
@@ -226,42 +262,42 @@ begin
 	if (nsprite[1:0]!=2'b00) // sprites 0,1 non transparant ?
 	begin
 		if (attach1) // sprites are attached -> 15 colors + transparant
-			sprdata[3:0] = {sprdat1[1:0],sprdat0[1:0]};
+			sprdata[7:0] = {osprm,sprdat1[1:0],sprdat0[1:0]};
 	   	else if (nsprite[0]) // output lowered number sprite
-			sprdata[3:0] = {2'b00,sprdat0[1:0]};
+			sprdata[7:0] = {esprm,2'b00,sprdat0[1:0]};
 	   	else // output higher numbered sprite
-			sprdata[3:0] = {2'b00,sprdat1[1:0]};
+			sprdata[7:0] = {osprm,2'b00,sprdat1[1:0]};
 	end
 	else if (nsprite[3:2]!=2'b00) // sprites 2,3 non transparant ?
 	begin
 		if (attach3) // sprites are attached -> 15 colors + transparant
-			sprdata[3:0] = {sprdat3[1:0],sprdat2[1:0]};
+			sprdata[7:0] = {osprm,sprdat3[1:0],sprdat2[1:0]};
 	   	else if (nsprite[2]) // output lowered number sprite
-			sprdata[3:0] = {2'b01,sprdat2[1:0]};
+			sprdata[7:0] = {esprm,2'b01,sprdat2[1:0]};
 	   	else // output higher numbered sprite
-			sprdata[3:0] = {2'b01,sprdat3[1:0]};
+			sprdata[7:0] = {osprm,2'b01,sprdat3[1:0]};
 	end
 	else if (nsprite[5:4]!=2'b00) // sprites 4,5 non transparant ?
 	begin
 		if (attach5) // sprites are attached -> 15 colors + transparant
-			sprdata[3:0] = {sprdat5[1:0],sprdat4[1:0]};
+			sprdata[7:0] = {osprm,sprdat5[1:0],sprdat4[1:0]};
 	   	else if (nsprite[4]) // output lowered number sprite
-			sprdata[3:0] = {2'b10,sprdat4[1:0]};
+			sprdata[7:0] = {esprm,2'b10,sprdat4[1:0]};
 	   	else // output higher numbered sprite
-			sprdata[3:0] = {2'b10,sprdat5[1:0]};
+			sprdata[7:0] = {osprm,2'b10,sprdat5[1:0]};
 	end
 	else if (nsprite[7:6]!=2'b00) // sprites 6,7 non transparant ?
 	begin
 		if (attach7) // sprites are attached -> 15 colors + transparant
-			sprdata[3:0] = {sprdat7[1:0],sprdat6[1:0]};
+			sprdata[7:0] = {osprm,sprdat7[1:0],sprdat6[1:0]};
 	   	else if (nsprite[6]) // output lowered number sprite
-			sprdata[3:0] = {2'b11,sprdat6[1:0]};
+			sprdata[7:0] = {esprm,2'b11,sprdat6[1:0]};
 	   	else // output higher numbered sprite
-			sprdata[3:0] = {2'b11,sprdat7[1:0]};
+			sprdata[7:0] = {osprm,2'b11,sprdat7[1:0]};
 	end
 	else // all sprites transparant
 	begin
-		sprdata[3:0] = 4'b0000;	
+		sprdata[7:0] = 8'b00000000;	
 	end	
 end
 

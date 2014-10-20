@@ -112,7 +112,7 @@ reg    [8:0] hdiwstop;      // horizontal display window stop position
 
 wire  [8:1] bpldata_out;    // bitplane serial data out from shifters
 wire  [8:1] bpldata;      // raw bitplane serial video data
-wire  [3:0] sprdata;      // sprite serial video data
+wire  [7:0] sprdata;      // sprite serial video data
 wire  [7:0] plfdata;      // playfield serial video data
 wire  [2:1] nplayfield;    // playfield 1,2 valid data signals
 wire  [7:0] nsprite;      // sprite 0-7 valid data signals
@@ -250,8 +250,8 @@ assign extblken = bplcon3[0] & ecsena;
 // BPLCON4 register
 reg  [16-1:0] bplcon4;    // bplcon3 register
 wire [ 8-1:0] bplxor;     // color select xor value
-wire [ 4-1:0] esprm;      // even sprites 4 MSB color table address // TODO what is this?
-wire [ 4-1:0] osprm;      // odd sprites 4 MSB color table address  // TODO what is this?
+wire [ 4-1:0] esprm;      // even sprites 4 MSB color table address
+wire [ 4-1:0] osprm;      // odd sprites 4 MSB color table address
 
 always @(posedge clk) begin
   if (clk7_en) begin
@@ -365,10 +365,14 @@ denise_sprites sprm0
   .clk(clk),
   .clk7_en(clk7_en),
   .reset(reset),
+  .aga(aga),
   .reg_address_in(reg_address_in),
   .hpos(hpos),
   .data_in(data_in),
+  .chip64(chip64),
   .sprena(display_ena),
+  .esprm(esprm),
+  .osprm(osprm),
   .nsprite(nsprite),
   .sprdata(sprdata)
 );
@@ -440,7 +444,7 @@ begin
   if (!window_ena) // we are outside of the visible window region, display border colour
     clut_data = 8'b000000;
   else if (sprsel) // select sprites
-    clut_data = {2'b00,2'b01,sprdata[3:0]};
+    clut_data = sprdata;
   else // select playfield
     clut_data = plfdata;
 end
