@@ -108,6 +108,7 @@ module userio
 	output	[4:0] chipset_config,
 	output	[3:0] floppy_config,
 	output	[1:0] scanline,
+  output  [1:0] dither,
 	output	[2:0] ide_config,
   output  [3:0] cpu_config,
 	output	usrrst,					//user reset from osd module
@@ -459,6 +460,7 @@ userio_osd osd1
 	.chipset_config(chipset_config),
 	.floppy_config(floppy_config),
 	.scanline(scanline),
+  .dither(dither),
 	.ide_config(ide_config),
   .cpu_config(cpu_config),
   .autofire_config(autofire_config),
