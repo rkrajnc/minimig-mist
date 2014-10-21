@@ -79,7 +79,7 @@ module denise
   input  strhor,          // horizontal strobe
   input   [8:1] reg_address_in,  // register adress inputs
   input   [15:0] data_in,      // bus data in
-  input   [64-1:0] chip64,    // big chipram read
+  input   [48-1:0] chip48,    // big chipram read
   output   [15:0] data_out,    // bus data out
   input  blank,          // blanking input
   output   [7:0] red,         // red componenent video out
@@ -263,8 +263,8 @@ always @(posedge clk) begin
 end
 
 assign bplxor   = bplcon4[15:8];
-assign esprm    = bplcon3[7:4];
-assign osprm    = bplcon3[3:0];
+assign esprm    = bplcon4[7:4];
+assign osprm    = bplcon4[3:0];
 
 // DIWSTART and DIWSTOP registers (vertical and horizontal limits of display window)
 
@@ -331,7 +331,7 @@ denise_bitplanes bplm0
   .aga(aga),
   .reg_address_in(reg_address_in),
   .data_in(data_in),
-  .chip64(chip64),
+  .chip48(chip48),
   .hires(hires),
   .shres(shres & ecs),
   .hpos(hpos),
@@ -369,7 +369,7 @@ denise_sprites sprm0
   .reg_address_in(reg_address_in),
   .hpos(hpos),
   .data_in(data_in),
-  .chip64(chip64),
+  .chip48(chip48),
   .sprena(display_ena),
   .esprm(esprm),
   .osprm(osprm),

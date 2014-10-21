@@ -45,7 +45,7 @@ module denise_bitplanes
   input   aga,
 	input 	[8:1] reg_address_in, 	// register address
 	input 	[15:0] data_in,	 		// bus data in
-  input   [64-1:0] chip64,  // big chipram read
+  input   [48-1:0] chip48,  // big chipram read
 	input 	hires,		   			// high resolution mode select
 	input 	shres,		   			// super high resolution mode select
 	input	[8:0] hpos,				// horizontal position (70ns resolution)
@@ -165,56 +165,56 @@ assign bp_fmode3  = (fmode[1:0] == 2'b11);
 always @(posedge clk)
   if (clk7_en) begin
   	if (reg_address_in[8:1] == BPL1DAT[8:1])
-  		bpl1dat <= chip64;
+  		bpl1dat <= {data_in,chip48};
   end
 		
 //bitplane buffer register for plane 2
 always @(posedge clk)
   if (clk7_en) begin
   	if (reg_address_in[8:1] == BPL2DAT[8:1])
-  		bpl2dat <= chip64;
+  		bpl2dat <= {data_in,chip48};
   end
 
 //bitplane buffer register for plane 3
 always @(posedge clk)
   if (clk7_en) begin
   	if (reg_address_in[8:1] == BPL3DAT[8:1])
-  		bpl3dat <= chip64;
+  		bpl3dat <= {data_in,chip48};
   end
 
 //bitplane buffer register for plane 4
 always @(posedge clk)
   if (clk7_en) begin
   	if (reg_address_in[8:1] == BPL4DAT[8:1])
-  		bpl4dat <= chip64;
+  		bpl4dat <= {data_in,chip48};
   end
 
 //bitplane buffer register for plane 5
 always @(posedge clk)
   if (clk7_en) begin
   	if (reg_address_in[8:1] == BPL5DAT[8:1])
-  		bpl5dat <= chip64;
+  		bpl5dat <= {data_in,chip48};
   end
 
 //bitplane buffer register for plane 6
 always @(posedge clk)
   if (clk7_en) begin
   	if (reg_address_in[8:1] == BPL6DAT[8:1])
-  		bpl6dat <= chip64;
+  		bpl6dat <= {data_in,chip48};
   end
 
 //bitplane buffer register for plane 7
 always @(posedge clk)
   if (clk7_en) begin
   	if (reg_address_in[8:1] == BPL7DAT[8:1])
-  		bpl7dat <= chip64;
+  		bpl7dat <= {data_in,chip48};
   end
 
 //bitplane buffer register for plane 8
 always @(posedge clk)
   if (clk7_en) begin
   	if (reg_address_in[8:1] == BPL8DAT[8:1])
-  		bpl8dat <= chip64;
+  		bpl8dat <= {data_in,chip48};
   end
 
 //generate load signal when plane 1 is written

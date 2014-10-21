@@ -168,7 +168,7 @@ module minimig
 	output	_ram_ble,			//sram lower byte select
 	output	_ram_we,			//sram write enable
 	output	_ram_oe,			//sram output enable
-  input [64-1:0] chip64,         // big chipram read
+  input [48-1:0] chip48,         // big chipram read
 	//system	pins
   input rst_ext,      // reset from ctrl block
   output rst_out,     // minimig reset status
@@ -360,6 +360,7 @@ wire	usrrst;					//user reset from osd interface
 wire	[1:0] lr_filter;		//lowres interpolation filter mode: bit 0 - horizontal, bit 1 - vertical
 wire	[1:0] hr_filter;		//hires interpolation filter mode: bit 0 - horizontal, bit 1 - vertical
 wire	[1:0] scanline;			//scanline effect configuration
+wire  [1:0] dither;   // video output dither
 wire	hires;					//hires signal from Denise for interpolation filter enable in Amber
 wire	aron;					//Action Replay is enabled
 wire	cpu_speed;				//requests CPU to switch speed mode
@@ -586,6 +587,7 @@ userio USERIO1
 	.chipset_config(chipset_config),
 	.floppy_config(floppy_config),
 	.scanline(scanline),
+  .dither(dither),
 	.ide_config(ide_config),
   .cpu_config(cpu_config),
 	.usrrst(usrrst),
@@ -616,7 +618,7 @@ denise DENISE1
 	.strhor(strhor_denise),
 	.reg_address_in(reg_address),
 	.data_in(custom_data_in),
-  .chip64(chip64),
+  .chip48(chip48),
 	.data_out(denise_data_out),
 	.blank(blank),
 	.red(red_i),
@@ -636,6 +638,7 @@ amber AMBER1
 	.lr_filter(lr_filter),
 	.hr_filter(hr_filter),
 	.scanline(scanline),
+  .dither(dither),
 	.htotal(htotal),
 	.hires(hires),
 	.osd_blank(osd_blank),
