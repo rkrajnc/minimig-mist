@@ -110,7 +110,7 @@ wire [ 32-1:0] tg68_VBR_out;
 wire           led;
 wire [ 16-1:0] ram_data;      // sram data bus
 wire [ 16-1:0] ramdata_in;    // sram data bus in
-wire [ 64-1:0] chip64;        // big chip read
+wire [ 48-1:0] chip48;        // big chip read
 wire [ 22-1:1] ram_address;   // sram address bus
 wire           _ram_bhe;      // sram upper byte select
 wire           _ram_ble;      // sram lower byte select
@@ -123,9 +123,16 @@ wire [ 15-1:0] ldata;         // left DAC data
 wire [ 15-1:0] rdata;         // right DAC data
 wire           audio_left;
 wire           audio_right;
+wire           vs;
+wire           hs;
 wire [  8-1:0] red;
 wire [  8-1:0] green;
 wire [  8-1:0] blue;
+reg            vs_reg;
+reg            hs_reg;
+reg  [  6-1:0] red_reg;
+reg  [  6-1:0] green_reg;
+reg  [  6-1:0] blue_reg;
 
 // sdram
 wire           reset_out;
@@ -161,9 +168,19 @@ assign joy_emu_en       = 1'b1; // sw_8;
 assign LED              = ~led;
 
 // VGA data
-assign VGA_R[5:0]       = red[7:2];
-assign VGA_G[5:0]       = green[7:2];
-assign VGA_B[5:0]       = blue[7:2];
+always @ (posedge clk_28) begin
+  vs_reg    <= #1 vs;
+  hs_reg    <= #1 hs;
+  red_reg   <= #1 red[7:2];
+  green_reg <= #1 green[7:2];
+  blue_reg  <= #1 blue[7:2];
+end
+
+assign VGA_VS           = vs_reg;
+assign VGA_HS           = hs_reg;
+assign VGA_R[5:0]       = red_reg[5:0];
+assign VGA_G[5:0]       = green_reg[5:0];
+assign VGA_B[5:0]       = blue_reg[5:0];
 
 
 //// amiga clocks ////
@@ -289,7 +306,7 @@ sdram_ctrl sdram (
   .chip_dma     (_ram_oe          ),
   .chipWR       (ram_data         ),
   .chipRD       (ramdata_in       ),
-  .chip64       (chip64           ),
+  .chip48       (chip48           ),
   // cpu
   .cpuAddr      (tg68_cad[24:1]   ),
   .cpustate     (tg68_cpustate    ),
@@ -359,7 +376,7 @@ minimig minimig (
   ._ram_ble     (_ram_ble         ), // SRAM lower byte select
   ._ram_we      (_ram_we          ), // SRAM write enable
   ._ram_oe      (_ram_oe          ), // SRAM output enable
-  .chip64       (chip64           ), // big chipram read
+  .chip48       (chip48           ), // big chipram read
   //system  pins
   .rst_ext      (rst_minimig      ), // reset from ctrl block
   .rst_out      (                 ), // minimig reset status
@@ -398,8 +415,8 @@ minimig minimig (
   .sdo          (minimig_sdo      ),  // SPI data output
   .sck          (SPI_SCK          ),  // SPI clock
   //video
-  ._hsync       (VGA_HS           ),  // horizontal sync
-  ._vsync       (VGA_VS           ),  // vertical sync
+  ._hsync       (hs               ),  // horizontal sync
+  ._vsync       (vs               ),  // vertical sync
   .red          (red              ),  // red
   .green        (green            ),  // green
   .blue         (blue             ),  // blue

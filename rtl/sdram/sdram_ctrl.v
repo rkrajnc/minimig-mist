@@ -61,7 +61,7 @@ module sdram_ctrl(
   input  wire           chip_dma,
   input  wire [ 16-1:0] chipWR,
   output reg  [ 16-1:0] chipRD,
-  output wire [ 64-1:0] chip64,
+  output wire [ 48-1:0] chip48,
   // cpu
   input  wire    [24:1] cpuAddr,
   input  wire [  6-1:0] cpustate,
@@ -409,7 +409,7 @@ always @ (posedge sysclk) begin
     chipRDd[3] <= sdata_reg;
 end
 
-assign chip64 = {chipRDd[0], chipRDd[1], chipRDd[2], chipRDd[3]};
+assign chip48 = {chipRDd[1], chipRDd[2], chipRDd[3]};
 
 // chip cache read
 always @ (*) begin
