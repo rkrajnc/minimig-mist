@@ -21,6 +21,8 @@
 unsigned short bcurx=0;
 unsigned short bcury=96;
 
+int bootscreen_adr = 0x80000 + 120*640/8;
+
 
 //// boot font ////
 static const char boot_font [96][8] = {
@@ -404,7 +406,6 @@ void BootInit()
 //// BootPrint() ////
 void BootPrintEx(char * str)
 {
-  static int adr = 0x80000 + 120*640/8;
   char buf[2];
   unsigned char i,j;
   unsigned char len;
@@ -416,7 +417,7 @@ void BootPrintEx(char * str)
   len = (len>80) ? 80 : len;
 
   for(j=0; j<8; j++) {
-    MEM_UPLOAD_INIT(adr);
+    MEM_UPLOAD_INIT(bootscreen_adr);
     for(i=0; i<len; i+=2) {
       SPI(boot_font[str[i]-32][j]);
       if (i==(len-1))
@@ -426,7 +427,7 @@ void BootPrintEx(char * str)
       SPIN(); SPIN(); SPIN(); SPIN();
     }
     MEM_UPLOAD_FINI();
-    adr += 640/8;
+    bootscreen_adr += 640/8;
   }
 }
 

@@ -240,6 +240,9 @@ RAMFUNC unsigned char ConfigureFpga(char *name)
     unsigned long i;
     unsigned char *ptr;
 
+    // reset bootscreen cursor position
+    bootscreen_adr = 0x80000 + 120*640/8;
+
     // set outputs
     *AT91C_PIOA_SODR = ALTERA_DCLK | ALTERA_DATA0 | ALTERA_NCONFIG;
     // enable outputs
@@ -824,15 +827,16 @@ void fpga_init(char *name) {
     SPIN(); SPIN(); SPIN(); SPIN();
     WaitTimer(100);
     BootInit();
-    WaitTimer(2000);
-    BootPrintEx("**** MINIMIG for MiST ****");
-    BootPrintEx("Minimig by Dennis van Weeren");
-    BootPrintEx("Updates by Jakub Bednarski, Tobias Gubener, Sascha Boing, A.M. Robinson");
-    BootPrintEx("DE1 port by Rok Krajnc (rok.krajnc@gmail.com)");
-    BootPrintEx("MiST port by Till Harbaum (till@harbaum.org)");
+    WaitTimer(1000);
+    BootPrintEx("**** MINIMIG-AGA for MiST ****");
     BootPrintEx(" ");
+    BootPrintEx("Original Minimig by Dennis van Weeren");
+    BootPrintEx("Updates by Jakub Bednarski, Tobias Gubener, Sascha Boing, A.M. Robinson & others");
+    BootPrintEx("MINIMIG-AGA by Rok Krajnc (rok.krajnc@gmail.com)");
+    BootPrintEx("MiST by Till Harbaum (till@harbaum.org)");
+    BootPrintEx("For updates & code see https://github.com/rkrajnc/minimig-de1");
     BootPrintEx("For support, see http://www.minimig.net");
-    BootPrint(" ");
+    BootPrintEx(" ");
     WaitTimer(1000);
 
     ChangeDirectory(DIRECTORY_ROOT);
@@ -843,7 +847,6 @@ void fpga_init(char *name) {
     df[2].status = 0;
     df[3].status = 0;
     
-    BootPrint(" ");
     BootPrintEx("Booting ...");
     iprintf("Booting ...\r");
     

@@ -732,7 +732,7 @@ void ConfigVideo(unsigned char hires, unsigned char lores, unsigned char scanlin
     EnableOsd();
     //SPI(OSDCMDCFGFLT | ((hires & 0x03) << 2) | (lores & 0x03));
     SPI(OSD_CMD_VID);
-    SPI(((hires & 0x03) << 4) | ((lores & 0x03)<<2) | (scanlines & 0x03));
+    SPI( (((scanlines>>2)&0x03)<< 6) | ((hires & 0x03) << 4) | ((lores & 0x03)<<2) | (scanlines & 0x03) );
     DisableOsd();
 }
 

@@ -50,6 +50,8 @@
 void BootInit();
 void BootPrintEx(char * str);
 
+extern int bootscreen_adr;
+
 
 #endif // __BOOT_H__
 

@@ -41,6 +41,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "tos.h"
 #include "cdc_control.h"
 #include "debug.h"
+#include "boot.h"
 
 // other constants
 #define DIRSIZE 8 // number of items in directory display window
@@ -86,6 +87,7 @@ const char *config_filter_msg[] =  {"none", "HORIZONTAL", "VERTICAL", "H+V"};
 const char *config_memory_chip_msg[] = {"0.5 MB", "1.0 MB", "1.5 MB", "2.0 MB"};
 const char *config_memory_slow_msg[] = {"none  ", "0.5 MB", "1.0 MB", "1.5 MB"};
 const char *config_scanlines_msg[] = {"off", "dim", "black"};
+const char *config_dither_msg[] = {"off", "SPT", "RND", "S+R"};
 const char *config_memory_fast_msg[] = {"none  ", "2.0 MB", "4.0 MB","8.0 MB","24.0 MB"};
 const char *config_cpu_msg[] = {"68000 ", "68010", "-----","020 alpha"};
 const char *config_hdf_msg[] = {"Disabled", "Hardfile (disk img)", "MMC/SD card", "MMC/SD partition 1", "MMC/SD partition 2", "MMC/SD partition 3", "MMC/SD partition 4"};
@@ -2195,7 +2197,7 @@ void HandleUI(void)
         /* video settings menu                                            */
         /******************************************************************/
     case MENU_SETTINGS_VIDEO1 :
-		menumask=0x0f;
+		menumask=0x1f;
 		parentstate=menustate;
 		helptext=helptexts[HELPTEXT_VIDEO];
  
@@ -2208,12 +2210,14 @@ void HandleUI(void)
         strcat(s, config_filter_msg[config.filter.hires & 0x03]);
         OsdWrite(2, s, menusub == 1,0);
         strcpy(s, "   Scanlines    : ");
-        strcat(s, config_scanlines_msg[config.scanlines % 3]);
+        strcat(s, config_scanlines_msg[(config.scanlines&0x3) % 3]);
         OsdWrite(3, s, menusub == 2,0);
-        OsdWrite(4, "", 0,0);
+        strcpy(s, "   Dither       : ");
+        strcat(s, config_dither_msg[(config.scanlines>>2) & 0x03]);
+        OsdWrite(4, s, menusub == 3,0);
         OsdWrite(5, "", 0,0);
         OsdWrite(6, "", 0,0);
-        OsdWrite(7, STD_EXIT, menusub == 3,0);
+        OsdWrite(7, STD_EXIT, menusub == 4,0);
 
         menustate = MENU_SETTINGS_VIDEO2;
         break;
@@ -2226,7 +2230,6 @@ void HandleUI(void)
                 config.filter.lores++;
                 config.filter.lores &= 0x03;
                 menustate = MENU_SETTINGS_VIDEO1;
-                //ConfigFilter(config.filter.lores, config.filter.hires);
                 ConfigVideo(config.filter.hires, config.filter.lores, config.scanlines);
             }
             else if (menusub == 1)
@@ -2234,20 +2237,23 @@ void HandleUI(void)
                 config.filter.hires++;
                 config.filter.hires &= 0x03;
                 menustate = MENU_SETTINGS_VIDEO1;
-                //ConfigFilter(config.filter.lores, config.filter.hires);
                 ConfigVideo(config.filter.hires, config.filter.lores, config.scanlines);
             }
             else if (menusub == 2)
             {
-                config.scanlines++;
-                if (config.scanlines > 2)
-                    config.scanlines = 0;
+                config.scanlines = ((config.scanlines + 1)&0x03) | (config.scanlines&0xfc);
+                if ((config.scanlines&0x03) > 2)
+                    config.scanlines = config.scanlines&0xfc;
                 menustate = MENU_SETTINGS_VIDEO1;
-                //ConfigScanlines(config.scanlines);
                 ConfigVideo(config.filter.hires, config.filter.lores, config.scanlines);
             }
-
             else if (menusub == 3)
+            {
+                config.scanlines = (config.scanlines + 4)&0x0f;
+                menustate = MENU_SETTINGS_VIDEO1;
+                ConfigVideo(config.filter.hires, config.filter.lores, config.scanlines);
+            }
+            else if (menusub == 4)
             {
                 menustate = MENU_MAIN2_1;
                 menusub = 4;
@@ -2305,6 +2311,8 @@ void HandleUI(void)
                 memcpy((void*)config.kickstart.name, (void*)file.name, sizeof(config.kickstart.name));
                 memcpy((void*)config.kickstart.long_name, (void*)file.long_name, sizeof(config.kickstart.long_name));
 
+                // reset bootscreen cursor position
+                bootscreen_adr = 0x80000 + 120*640/8;
                 OsdDisable();
                 //OsdReset(RESET_BOOTLOADER);
                 //ConfigChipset(config.chipset | CONFIG_TURBO);
