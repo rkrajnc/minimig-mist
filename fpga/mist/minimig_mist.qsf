@@ -45,7 +45,7 @@ set_global_assignment -name STRATIX_DEVICE_IO_STANDARD "3.3-V LVTTL"
 
 set_global_assignment -name CYCLONEII_OPTIMIZATION_TECHNIQUE BALANCED
 set_global_assignment -name SMART_RECOMPILE ON
-set_global_assignment -name ENABLE_SIGNALTAP ON
+set_global_assignment -name ENABLE_SIGNALTAP OFF
 set_global_assignment -name USE_SIGNALTAP_FILE stp1.stp
 set_global_assignment -name PHYSICAL_SYNTHESIS_COMBO_LOGIC ON
 set_global_assignment -name PHYSICAL_SYNTHESIS_REGISTER_DUPLICATION ON
@@ -215,6 +215,26 @@ set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nRAS
 set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nCAS
 set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nWE
 set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_nCS
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to VGA_R[5]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to VGA_R[4]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to VGA_R[3]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to VGA_R[2]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to VGA_R[1]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to VGA_R[0]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to VGA_B[5]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to VGA_B[4]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to VGA_B[3]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to VGA_B[2]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to VGA_B[1]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to VGA_B[0]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to VGA_G[5]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to VGA_G[4]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to VGA_G[3]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to VGA_G[2]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to VGA_G[1]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to VGA_G[0]
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to VGA_VS
+set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to VGA_HS
 
 set_instance_assignment -name FAST_OUTPUT_ENABLE_REGISTER ON -to SDRAM_DQ[0]
 set_instance_assignment -name FAST_OUTPUT_ENABLE_REGISTER ON -to SDRAM_DQ[1]
@@ -290,30 +310,29 @@ set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_nCS
 set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_CKE
 set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to SDRAM_CLK
 
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_R[5]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_R[4]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_R[3]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_R[2]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_R[1]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_R[0]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 8MA -to VGA_R[5]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 8MA -to VGA_R[4]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 8MA -to VGA_R[3]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 8MA -to VGA_R[2]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 8MA -to VGA_R[1]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 8MA -to VGA_R[0]
 
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_G[5]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_G[4]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_G[3]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_G[2]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_G[1]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_G[0]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 8MA -to VGA_G[5]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 8MA -to VGA_G[4]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 8MA -to VGA_G[3]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 8MA -to VGA_G[2]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 8MA -to VGA_G[1]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 8MA -to VGA_G[0]
 
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_B[5]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_B[4]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_B[3]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_B[2]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_B[1]
-set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to VGA_B[0]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 8MA -to VGA_B[5]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 8MA -to VGA_B[4]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 8MA -to VGA_B[3]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 8MA -to VGA_B[2]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 8MA -to VGA_B[1]
+set_instance_assignment -name CURRENT_STRENGTH_NEW 8MA -to VGA_B[0]
 
-
-
-
+set_instance_assignment -name CURRENT_STRENGTH_NEW 8MA -to VGA_HS
+set_instance_assignment -name CURRENT_STRENGTH_NEW 8MA -to VGA_VS
 
 
 set_global_assignment -name VERILOG_FILE ../../rtl/soc/minimig_mist_top.v
@@ -389,247 +408,5 @@ set_global_assignment -name VHDL_FILE ../../rtl/tg68k/TG68K_ALU.vhd
 set_global_assignment -name VHDL_FILE ../../rtl/tg68k/TG68K.vhd
 set_global_assignment -name SDC_FILE minimig_mist.sdc
 set_global_assignment -name SIGNALTAP_FILE stp1.stp
-set_global_assignment -name SLD_NODE_CREATOR_ID 110 -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_ENTITY_NAME sld_signaltap -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_clk -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|clk" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[0] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplcon0_delayed[0]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[1] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplcon0_delayed[1]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[2] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplcon0_delayed[2]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[3] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplcon0_delayed[3]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[4] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplcon0_delayed[4]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[5] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplcon0_delayed[5]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[0] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplcon0_delayed[0]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[1] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplcon0_delayed[1]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[2] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplcon0_delayed[2]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[3] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplcon0_delayed[3]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[4] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplcon0_delayed[4]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[5] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplcon0_delayed[5]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT trigger_in -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|ddfrun" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_NODE_INFO=805334528" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_POWER_UP_TRIGGER=0" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_STORAGE_QUALIFIER_INVERSION_MASK_LENGTH=0" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_ATTRIBUTE_MEM_MODE=OFF" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_STATE_FLOW_USE_GENERATED=0" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_STATE_BITS=11" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_BUFFER_FULL_STOP=1" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_CURRENT_RESOURCE_WIDTH=1" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_TRIGGER_LEVEL=1" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_TRIGGER_IN_ENABLED=1" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_ADVANCED_TRIGGER_ENTITY=basic,1," -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_TRIGGER_LEVEL_PIPELINE=1" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_ENABLE_ADVANCED_TRIGGER=0" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_SEGMENT_SIZE=2048" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_SAMPLE_DEPTH=2048" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[6] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplpth_in[16]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[7] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplpth_in[17]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[8] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplpth_in[18]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[9] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplpth_in[19]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[10] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplpth_in[20]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[11] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplptl_in[10]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[12] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplptl_in[11]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[13] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplptl_in[12]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[14] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplptl_in[13]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[15] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplptl_in[14]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[16] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplptl_in[15]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[17] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplptl_in[1]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[18] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplptl_in[2]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[19] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplptl_in[3]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[20] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplptl_in[4]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[21] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplptl_in[5]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[22] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplptl_in[6]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[23] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplptl_in[7]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[24] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplptl_in[8]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[25] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplptl_in[9]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[26] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bpu[0]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[27] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bpu[1]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[28] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bpu[2]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[29] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bpu[3]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[30] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|clk7_en" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[31] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|ddfena" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[32] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|ddfend" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[33] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|ddfrun" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[34] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|ddfseq[0]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[35] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|ddfseq[1]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[36] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|ddfseq[2]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[37] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|ddfseq[3]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[38] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|ddfseq[4]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[39] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|dma" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[40] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|fmode[0]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[41] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|fmode[10]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[42] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|fmode[11]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[43] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|fmode[12]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[44] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|fmode[13]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[45] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|fmode[14]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[46] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|fmode[15]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[47] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|fmode[1]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[48] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|fmode[2]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[49] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|fmode[3]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[50] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|fmode[4]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[51] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|fmode[5]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[52] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|fmode[6]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[53] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|fmode[7]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[54] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|fmode[8]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[55] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|fmode[9]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[56] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|mod" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[57] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|plane[0]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[58] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|plane[1]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[59] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|plane[2]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[60] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|plane[3]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[61] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|plane[4]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[62] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|shres" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[63] -to "minimig:minimig|denise:DENISE1|bplcon0[0]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[64] -to "minimig:minimig|denise:DENISE1|bplcon0[10]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[65] -to "minimig:minimig|denise:DENISE1|bplcon0[11]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[66] -to "minimig:minimig|denise:DENISE1|bplcon0[12]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[67] -to "minimig:minimig|denise:DENISE1|bplcon0[13]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[68] -to "minimig:minimig|denise:DENISE1|bplcon0[14]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[69] -to "minimig:minimig|denise:DENISE1|bplcon0[15]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[70] -to "minimig:minimig|denise:DENISE1|bplcon0[1]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[71] -to "minimig:minimig|denise:DENISE1|bplcon0[2]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[72] -to "minimig:minimig|denise:DENISE1|bplcon0[3]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[73] -to "minimig:minimig|denise:DENISE1|bplcon0[4]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[74] -to "minimig:minimig|denise:DENISE1|bplcon0[5]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[75] -to "minimig:minimig|denise:DENISE1|bplcon0[6]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[76] -to "minimig:minimig|denise:DENISE1|bplcon0[7]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[77] -to "minimig:minimig|denise:DENISE1|bplcon0[8]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[78] -to "minimig:minimig|denise:DENISE1|bplcon0[9]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[79] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|bplcon1[0]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[80] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|bplcon1[10]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[81] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|bplcon1[11]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[82] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|bplcon1[12]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[83] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|bplcon1[13]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[84] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|bplcon1[14]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[85] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|bplcon1[15]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[86] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|bplcon1[1]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[87] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|bplcon1[2]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[88] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|bplcon1[3]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[89] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|bplcon1[4]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[90] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|bplcon1[5]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[91] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|bplcon1[6]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[92] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|bplcon1[7]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[93] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|bplcon1[8]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[94] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|bplcon1[9]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[95] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|denise_bitplane_shifter:bplshft1|delay[0]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[96] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|denise_bitplane_shifter:bplshft1|delay[1]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[97] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|denise_bitplane_shifter:bplshft1|delay[2]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[98] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|denise_bitplane_shifter:bplshft1|delay[3]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[99] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|denise_bitplane_shifter:bplshft1|load" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[100] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|denise_bitplane_shifter:bplshft1|scroll[0]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[101] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|denise_bitplane_shifter:bplshft1|scroll[1]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[102] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|denise_bitplane_shifter:bplshft1|scroll[2]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[103] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|denise_bitplane_shifter:bplshft1|scroll[3]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[104] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|denise_bitplane_shifter:bplshft1|scroll[4]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[105] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|denise_bitplane_shifter:bplshft1|scroll[5]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[106] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|denise_bitplane_shifter:bplshft1|scroll[6]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[107] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|denise_bitplane_shifter:bplshft1|scroll[7]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[108] -to "minimig:minimig|denise:DENISE1|ehb_en" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[6] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplpth_in[16]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[7] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplpth_in[17]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[8] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplpth_in[18]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[9] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplpth_in[19]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[10] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplpth_in[20]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[11] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplptl_in[10]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[12] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplptl_in[11]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[13] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplptl_in[12]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[14] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplptl_in[13]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[15] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplptl_in[14]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[16] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplptl_in[15]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[17] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplptl_in[1]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[18] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplptl_in[2]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[19] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplptl_in[3]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[20] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplptl_in[4]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[21] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplptl_in[5]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[22] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplptl_in[6]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[23] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplptl_in[7]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[24] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplptl_in[8]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[25] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bplptl_in[9]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[26] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bpu[0]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[27] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bpu[1]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[28] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bpu[2]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[29] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|bpu[3]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[30] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|clk7_en" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[31] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|ddfena" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[32] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|ddfend" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[33] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|ddfrun" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[34] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|ddfseq[0]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[35] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|ddfseq[1]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[36] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|ddfseq[2]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[37] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|ddfseq[3]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[38] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|ddfseq[4]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[39] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|dma" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[40] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|fmode[0]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[41] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|fmode[10]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[42] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|fmode[11]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[43] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|fmode[12]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[44] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|fmode[13]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[45] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|fmode[14]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[46] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|fmode[15]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[47] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|fmode[1]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[48] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|fmode[2]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[49] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|fmode[3]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[50] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|fmode[4]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[51] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|fmode[5]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[52] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|fmode[6]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[53] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|fmode[7]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[54] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|fmode[8]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[55] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|fmode[9]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[56] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|mod" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[57] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|plane[0]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[58] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|plane[1]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[59] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|plane[2]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[60] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|plane[3]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[61] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|plane[4]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[62] -to "minimig:minimig|agnus:AGNUS1|agnus_bitplanedma:bpd1|shres" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[63] -to "minimig:minimig|denise:DENISE1|bplcon0[0]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[64] -to "minimig:minimig|denise:DENISE1|bplcon0[10]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[65] -to "minimig:minimig|denise:DENISE1|bplcon0[11]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[66] -to "minimig:minimig|denise:DENISE1|bplcon0[12]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[67] -to "minimig:minimig|denise:DENISE1|bplcon0[13]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[68] -to "minimig:minimig|denise:DENISE1|bplcon0[14]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[69] -to "minimig:minimig|denise:DENISE1|bplcon0[15]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[70] -to "minimig:minimig|denise:DENISE1|bplcon0[1]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[71] -to "minimig:minimig|denise:DENISE1|bplcon0[2]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[72] -to "minimig:minimig|denise:DENISE1|bplcon0[3]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[73] -to "minimig:minimig|denise:DENISE1|bplcon0[4]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[74] -to "minimig:minimig|denise:DENISE1|bplcon0[5]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[75] -to "minimig:minimig|denise:DENISE1|bplcon0[6]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[76] -to "minimig:minimig|denise:DENISE1|bplcon0[7]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[77] -to "minimig:minimig|denise:DENISE1|bplcon0[8]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[78] -to "minimig:minimig|denise:DENISE1|bplcon0[9]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[79] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|bplcon1[0]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[80] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|bplcon1[10]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[81] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|bplcon1[11]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[82] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|bplcon1[12]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[83] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|bplcon1[13]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[84] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|bplcon1[14]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[85] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|bplcon1[15]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[86] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|bplcon1[1]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[87] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|bplcon1[2]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[88] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|bplcon1[3]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[89] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|bplcon1[4]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[90] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|bplcon1[5]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[91] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|bplcon1[6]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[92] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|bplcon1[7]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[93] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|bplcon1[8]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[94] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|bplcon1[9]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[95] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|denise_bitplane_shifter:bplshft1|delay[0]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[96] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|denise_bitplane_shifter:bplshft1|delay[1]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[97] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|denise_bitplane_shifter:bplshft1|delay[2]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[98] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|denise_bitplane_shifter:bplshft1|delay[3]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[99] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|denise_bitplane_shifter:bplshft1|load" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[100] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|denise_bitplane_shifter:bplshft1|scroll[0]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[101] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|denise_bitplane_shifter:bplshft1|scroll[1]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[102] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|denise_bitplane_shifter:bplshft1|scroll[2]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[103] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|denise_bitplane_shifter:bplshft1|scroll[3]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[104] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|denise_bitplane_shifter:bplshft1|scroll[4]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[105] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|denise_bitplane_shifter:bplshft1|scroll[5]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[106] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|denise_bitplane_shifter:bplshft1|scroll[6]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[107] -to "minimig:minimig|denise:DENISE1|denise_bitplanes:bplm0|denise_bitplane_shifter:bplshft1|scroll[7]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[108] -to "minimig:minimig|denise:DENISE1|ehb_en" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_DATA_BITS=109" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_TRIGGER_BITS=109" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_INVERSION_MASK=0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_INVERSION_MASK_LENGTH=352" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_NODE_CRC_LOWORD=10051" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_NODE_CRC_HIWORD=52005" -section_id auto_signaltap_0
+
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
