@@ -42,7 +42,7 @@ module denise_sprites
 	input	[8:1] reg_address_in,	// register address input
 	input	[8:0] hpos,				// horizontal beam counter
 	input 	[15:0] data_in, 		// bus data in
-  input [63:0] chip64,
+  input [48:0] chip48,
 	input	sprena,					// sprite enable signal
   input [3:0] esprm,
   input [3:0] osprm,
@@ -124,7 +124,7 @@ denise_sprites_shifter sps0
 	.address(reg_address_in[2:1]),
 	.hpos(hpos),
   .fmode(fmode),
-  .chip64(chip64),
+  .chip48(chip48),
 	.data_in(data_in),
 	.sprdata(sprdat0),
 	.attach(attach0)
@@ -140,7 +140,7 @@ denise_sprites_shifter sps1
 	.address(reg_address_in[2:1]),
 	.hpos(hpos),
   .fmode(fmode),
-  .chip64(chip64),
+  .chip48(chip48),
 	.data_in(data_in),
 	.sprdata(sprdat1),
 	.attach(attach1)
@@ -156,7 +156,7 @@ denise_sprites_shifter sps2
 	.address(reg_address_in[2:1]),
 	.hpos(hpos),
   .fmode(fmode),
-  .chip64(chip64),
+  .chip48(chip48),
 	.data_in(data_in),
 	.sprdata(sprdat2),
 	.attach(attach2)
@@ -172,7 +172,7 @@ denise_sprites_shifter sps3
 	.address(reg_address_in[2:1]),
 	.hpos(hpos),
   .fmode(fmode),
-  .chip64(chip64),
+  .chip48(chip48),
 	.data_in(data_in),
 	.sprdata(sprdat3),
 	.attach(attach3)
@@ -188,7 +188,7 @@ denise_sprites_shifter sps4
 	.address(reg_address_in[2:1]),
 	.hpos(hpos),
   .fmode(fmode),
-  .chip64(chip64),
+  .chip48(chip48),
 	.data_in(data_in),
 	.sprdata(sprdat4),
 	.attach(attach4)
@@ -204,7 +204,7 @@ denise_sprites_shifter sps5
 	.address(reg_address_in[2:1]),
 	.hpos(hpos),
   .fmode(fmode),
-  .chip64(chip64),
+  .chip48(chip48),
 	.data_in(data_in),
 	.sprdata(sprdat5),
 	.attach(attach5)
@@ -220,7 +220,7 @@ denise_sprites_shifter sps6
 	.address(reg_address_in[2:1]),
 	.hpos(hpos),
   .fmode(fmode),
-  .chip64(chip64),
+  .chip48(chip48),
 	.data_in(data_in),
 	.sprdata(sprdat6),
 	.attach(attach6)
@@ -236,7 +236,7 @@ denise_sprites_shifter sps7
 	.address(reg_address_in[2:1]),
 	.hpos(hpos),
   .fmode(fmode),
-  .chip64(chip64),
+  .chip48(chip48),
 	.data_in(data_in),
 	.sprdata(sprdat7),
 	.attach(attach7)

@@ -15,7 +15,7 @@ module denise_sprites_shifter
 	input	[1:0] address,		   	// register address input
 	input	[8:0] hpos,				// horizontal beam counter
   input [15:0] fmode,
-  input [63:0] chip64,
+  input [48-1:0] chip48,
 	input 	[15:0] data_in, 		// bus data in
 	output	[1:0] sprdata,			// serialized sprite data out
 	output	reg attach				// sprite is attached
@@ -44,9 +44,9 @@ reg  [64-1:0] spr_fmode_dat;
 
 always @ (*) begin
   case(fmode[3:2])
-    2'b00   : spr_fmode_dat = {chip64[63:48], 48'h000000000000};
-    2'b11   : spr_fmode_dat = chip64[63:0];
-    default : spr_fmode_dat = {chip64[63:32], 32'h00000000};
+    2'b00   : spr_fmode_dat = {data_in, 48'h000000000000};
+    2'b11   : spr_fmode_dat = {data_in, chip48[47:0]};
+    default : spr_fmode_dat = {data_in, chip48[47:32], 32'h00000000};
   endcase
 end
 
