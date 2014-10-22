@@ -38,6 +38,8 @@ localparam FMODE     = 9'h1fc;
 // local signals
 reg		[8:2] ddfstrt;				// display data fetch start
 reg 	[8:2] ddfstop; 				// display data fetch stop
+wire  [8:2] ddfdiff;
+wire  [8:2] ddfdiff_masked;
 reg		[15:1] bpl1mod;				// modulo for odd bitplanes
 reg		[15:1] bpl2mod;				// modulo for even bitplanes
 reg		[5:0] bplcon0;				// bitplane control (SHRES, HIRES and BPU bits)
@@ -273,6 +275,11 @@ reg soft_stop;
 reg hard_start;
 reg hard_stop;
 
+assign ddfdiff[8:2] = ddfstop[8:2] - ddfstrt[8:2];
+assign ddfdiff_masked[8:2] = bp_fmode3 ? {3'b000, ddfdiff[3:2], 2'b0} : 7'b0000000;
+
+wire ddfstop_fix = bp_fmode3 & (ddfstop[2] ^ ddfstrt[2]);
+
 always @(posedge clk)
   if (clk7_en) begin
   	if (hpos[0])
@@ -285,7 +292,7 @@ always @(posedge clk)
 always @(posedge clk)
   if (clk7_en) begin
   	if (hpos[0])
-  		if (hpos[8:1]=={ddfstop[8:3], ddfstop[2] & ecs, 1'b0})
+  		if ( hpos[8:1]==({ddfstop[8:3], ddfstop[2] & ecs, 1'b0} + (ddfstop_fix ? 7'h8 : 7'h0)) )
   			soft_stop <= VCC;
   		else
   			soft_stop <= GND;
