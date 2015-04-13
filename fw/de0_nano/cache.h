@@ -66,12 +66,12 @@ static inline void dcache_enable(void)
 
 static inline void icache_disable(void)
 {
-	mtspr(SPR_SR, mfspr(SPR_SR) & ~SPR_SR_DCE);
+	mtspr(SPR_SR, mfspr(SPR_SR) & ~SPR_SR_ICE);
 }
 
 static inline void icache_enable(void)
 {
-	mtspr(SPR_SR, mfspr(SPR_SR) | SPR_SR_DCE);
+	mtspr(SPR_SR, mfspr(SPR_SR) | SPR_SR_ICE);
 }
 
 #endif
