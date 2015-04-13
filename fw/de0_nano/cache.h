@@ -50,7 +50,7 @@ static inline void dcache_invalidate_all(void)
 	block_size = dc_block_size();
 	cache_size = block_size * dc_sets();
 	for (i = 0; i < cache_size; i += block_size)
-		mtspr(SPR_ICBIR, i);
+		mtspr(SPR_DCBIR, i);
 }
 
 static inline void dcache_disable(void)
