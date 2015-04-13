@@ -78,7 +78,7 @@ always @ (posedge s_clk) begin
     end
     ST_U_SETUP : begin
       s_cs    <= #1 1'b1;
-      s_adr   <= #1 {adr_d[22-1:2], 1'b0, 1'b0};
+      s_adr   <= #1 {adr_d[SAW-1:2], 1'b0, 1'b0};
       s_sel   <= #1 sel_d[3:2];
       s_we    <= #1 we_d;
       s_dat_w <= #1 dat_w_d[31:16];
@@ -93,7 +93,7 @@ always @ (posedge s_clk) begin
     end
     ST_L_SETUP : begin
       s_cs    <= #1 1'b1;
-      s_adr   <= #1 {adr_d[22-1:2], 1'b1, 1'b0};
+      s_adr   <= #1 {adr_d[SAW-1:2], 1'b1, 1'b0};
       s_sel   <= #1 sel_d[1:0];
       s_we    <= #1 we_d;
       s_dat_w <= #1 dat_w_d[15:0];

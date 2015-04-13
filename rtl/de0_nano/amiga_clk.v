@@ -4,11 +4,11 @@
 
 module amiga_clk (
   input  wire           rst,        // asynhronous reset input
-  input  wire           clk_in,     // input clock        ( 27.000000MHz)
-  output wire           clk_114,    // SDRAM ctrl   clock (114.750000MHz)
-  output wire           clk_sdram,  // SDRAM output clock (114.750000MHz, -146.25 deg)
-  output wire           clk_28,     // 28MHz output clock ( 28.375160MHz)
-  output wire           clk_7,      // 7MHz  output clock (  7.171875MHz)
+  input  wire           clk_in,     // input clock        ( 50.000000MHz)
+  output wire           clk_114,    // SDRAM ctrl   clock (114.285714MHz)
+  output wire           clk_sdram,  // SDRAM output clock (114.285714MHz, -146.25 deg)
+  output wire           clk_28,     // 28MHz output clock ( 28.571428MHz)
+  output wire           clk_7,      // 7MHz  output clock (  7.142857MHz)
   output wire           clk7_en,    // 7MHz output clock enable (on 28MHz clock domain)
   output wire           c1,         // clk28m clock domain signal synchronous with clk signal
   output wire           c3,         // clk28m clock domain signal synchronous with clk signal delayed by 90 degrees

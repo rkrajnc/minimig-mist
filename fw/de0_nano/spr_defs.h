@@ -257,6 +257,40 @@ others it is also used in assembly file(s). */
 #define SPR_ICCR_EW	0x000000ff  /* Enable ways */
 
 /*
+ * Bit definitions for Data Cache Configuration Register
+ */
+
+#define SPR_DCCFGR_NCW		0x00000007
+#define SPR_DCCFGR_NCS		0x00000078
+#define SPR_DCCFGR_CBS		0x00000080
+#define SPR_DCCFGR_CWS		0x00000100
+#define SPR_DCCFGR_CCRI		0x00000200
+#define SPR_DCCFGR_CBIRI	0x00000400
+#define SPR_DCCFGR_CBPRI	0x00000800
+#define SPR_DCCFGR_CBLRI	0x00001000
+#define SPR_DCCFGR_CBFRI	0x00002000
+#define SPR_DCCFGR_CBWBRI	0x00004000
+
+#define SPR_DCCFGR_NCW_OFF	0
+#define SPR_DCCFGR_NCS_OFF	3
+#define SPR_DCCFGR_CBS_OFF	7
+
+/*
+ * Bit definitions for Instruction Cache Configuration Register
+ */
+#define SPR_ICCFGR_NCW		0x00000007
+#define SPR_ICCFGR_NCS		0x00000078
+#define SPR_ICCFGR_CBS		0x00000080
+#define SPR_ICCFGR_CCRI		0x00000200
+#define SPR_ICCFGR_CBIRI	0x00000400
+#define SPR_ICCFGR_CBPRI	0x00000800
+#define SPR_ICCFGR_CBLRI	0x00001000
+
+#define SPR_ICCFGR_NCW_OFF	0
+#define SPR_ICCFGR_NCS_OFF	3
+#define SPR_ICCFGR_CBS_OFF	7
+
+/*
  * Bit definitions for Debug Control registers
  *
  */

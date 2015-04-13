@@ -26,22 +26,21 @@ BUS
    |           |   | | |
    |   --------|---- | |
    |   |       |     | |
-   |   |       |  ---- -----------------
-   |   |       |  |          |         |
-  -------     -------        |         |
-  | ARB |     | ARB |        |         |
-  -------     -------        |         |
-     |           |           |         |
-  -------     -------     -------   --------
-  | ROM |     | RAM |     | REG |   | DRAM |
-  -------     -------     -------   --------
+   |   |       |  ---- -------
+   |   |       |  |          |
+  -------     -------        |
+  | ARB |     | ARB |        |
+  -------     -------        |
+     |           |           |
+  -------     --------    -------
+  | ROM |     | DRAM |    | REG |
+  -------     --------    -------
 
 ICPU - CPU instruction bus
 DCPU - CPU data bus
 DEC  - slave decoder
 ARB  - master arbiter
 ROM  - FLASH
-RAM  - SRAM
 REG  - registers
 DRAM - SDRAM
 
@@ -68,7 +67,7 @@ MEMORY ORGANIZATION
 0 - (0x000000 - 0x3fffff) adr[23:22] == 2'b00 - ROM
 1 - (0x400000 - 0x7fffff) adr[23:22] == 2'b01 - RAM
 2 - (0x800000 - 0xbfffff) adr[23:22] == 2'b10 - REGS
-3 - (0xc00000 - 0xffffff) adr[23:22] == 2'b11 - DRAM
+1 - (0xc00000 - 0xffffff) adr[23:22] == 2'b11 - DRAM (dcpu only)
 
 Only 24 bits of address space is used. This space is divided into four 4Mbyte blocks.
 
@@ -112,20 +111,10 @@ module ctrl_top (
   input  wire [  4-1:0] ctrl_cfg,
   // status
   output wire           rom_status,
-  output wire           ram_status,
   output wire           reg_status,
   output wire           dram_status,
   output wire [  4-1:0] ctrl_status,
   input  wire [  4-1:0] sys_status,
-  // SRAM interface
-  output wire [ 18-1:0] sram_adr,
-  output wire           sram_ce_n,
-  output wire           sram_we_n,
-  output wire           sram_ub_n,
-  output wire           sram_lb_n,
-  output wire           sram_oe_n,
-  output wire [ 16-1:0] sram_dat_w,
-  input  wire [ 16-1:0] sram_dat_r,
   // FLASH interface
   output wire [ 22-1:0] fl_adr,
   output wire           fl_ce_n,
@@ -135,7 +124,7 @@ module ctrl_top (
   output wire [  8-1:0] fl_dat_w,
   input  wire [  8-1:0] fl_dat_r,
   // SDRAM interface
-  output wire [ 22-1:0] dram_adr,
+  output wire [ 23-1:0] dram_adr,
   output wire           dram_cs,
   output wire           dram_we,
   output wire [  4-1:0] dram_sel,
@@ -245,14 +234,6 @@ wire [QDW-1:0] icpu_dat_w;
 wire [QDW-1:0] icpu_dat_r;
 wire           icpu_ack;
 wire           icpu_err;
-wire [SAW-1:0] ram_adr;
-wire           ram_cs;
-wire           ram_we;
-wire [QSW-1:0] ram_sel;
-wire [QDW-1:0] ram_dat_w;
-wire [QDW-1:0] ram_dat_r;
-wire           ram_ack;
-wire           ram_err;
 wire [SAW-1:0] rom_adr;
 wire           rom_cs;
 wire           rom_we;
@@ -283,7 +264,6 @@ qmem_bus #(
   .rst        (rst        ),
   // status
   .rom_s      (rom_status ),
-  .ram_s      (ram_status ),
   .reg_s      (reg_status ),
   .dram_s     (dram_status),
   // master 0 (dcpu)
@@ -313,15 +293,15 @@ qmem_bus #(
   .s0_dat_r   (rom_dat_r  ),
   .s0_ack     (rom_ack    ),
   .s0_err     (rom_err    ),
-  // slave 1 (ram)
-  .s1_adr     (ram_adr    ),
-  .s1_cs      (ram_cs     ),
-  .s1_we      (ram_we     ),
-  .s1_sel     (ram_sel    ),
-  .s1_dat_w   (ram_dat_w  ),
-  .s1_dat_r   (ram_dat_r  ),
-  .s1_ack     (ram_ack    ),
-  .s1_err     (ram_err    ),
+  // slave 1 (dram)
+  .s1_adr     (dram_adr   ),
+  .s1_cs      (dram_cs    ),
+  .s1_we      (dram_we    ),
+  .s1_sel     (dram_sel   ),
+  .s1_dat_w   (dram_dat_w ),
+  .s1_dat_r   (dram_dat_r ),
+  .s1_ack     (dram_ack   ),
+  .s1_err     (dram_err   ),
   // slave 2 (regs)
   .s2_adr     (regs_adr   ),
   .s2_cs      (regs_cs    ),
@@ -330,25 +310,19 @@ qmem_bus #(
   .s2_dat_w   (regs_dat_w ),
   .s2_dat_r   (regs_dat_r ),
   .s2_ack     (regs_ack   ),
-  .s2_err     (regs_err   ),
-  // slave 3 (dram)
-  .s3_adr     (dram_adr   ),
-  .s3_cs      (dram_cs    ),
-  .s3_we      (dram_we    ),
-  .s3_sel     (dram_sel   ),
-  .s3_dat_w   (dram_dat_w ),
-  .s3_dat_r   (dram_dat_r ),
-  .s3_ack     (dram_ack   ),
-  .s3_err     (dram_err   )
+  .s2_err     (regs_err   )
 );
 
 
 
 ////////////////////////////////////////
-// OR1200 cpu                         //
+// OR1K cpu                           //
 ////////////////////////////////////////
-
+`ifdef MINIMIG_MOR1KX
+mor1kx_wrapper #(
+`else
 or1200_top_wrapper #(
+`endif
   .AW       (MAW)             // address bus width
 ) ctrl_cpu (
   // system
@@ -371,44 +345,6 @@ or1200_top_wrapper #(
   .icpu_dat_r (icpu_dat_r ),
   .icpu_ack   (icpu_ack   )
 );
-
-
-
-////////////////////////////////////////
-// RAM                                //
-////////////////////////////////////////
-
-// TODO check data register!
-qmem_sram #(
-  .AW         (SAW),          // address bus width
-  .DW         (QDW),          // data bus width
-  .SW         (QSW)           // select width
-) ctrl_ram (
-  // system signals
-  .clk50      (clk_50     ),
-  .clk100     (clk_100    ),
-  .rst        (rst        ),
-  // qmem bus
-  .adr        (ram_adr    ),
-  .cs         (ram_cs     ),
-  .we         (ram_we     ),
-  .sel        (ram_sel    ),
-  .dat_w      (ram_dat_w  ),
-  .dat_r      (ram_dat_r  ),
-  .ack        (ram_ack    ),
-  .err        (ram_err    ),
-  // SRAM interface
-  .sram_adr   (sram_adr   ),
-  .sram_ce_n  (sram_ce_n  ),
-  .sram_we_n  (sram_we_n  ),
-  .sram_ub_n  (sram_ub_n  ),
-  .sram_lb_n  (sram_lb_n  ),
-  .sram_oe_n  (sram_oe_n  ),
-  .sram_dat_w (sram_dat_w ),
-  .sram_dat_r (sram_dat_r )
-);
-
-
 
 ////////////////////////////////////////
 // ROM                                //
@@ -503,4 +439,3 @@ ctrl_regs #(
 
 
 endmodule
-

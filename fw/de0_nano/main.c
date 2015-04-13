@@ -54,7 +54,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "boot_logo.h"
 #include "boot_print.h"
 #include "serial.h"
-
+#include "cache.h"
 #include "stdio.h"
 #include "string.h"
 #include <inttypes.h>
@@ -125,6 +125,9 @@ __geta4 void main(void)
 
   uint32_t spiclk;
   fileTYPE sd_boot_file;
+
+  icache_invalidate_all();
+  icache_enable();
 
   // enable normal SPI
   SPI_normal();

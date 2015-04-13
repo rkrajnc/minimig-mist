@@ -76,7 +76,7 @@ char UploadKickstart(char *name)
     unsigned int adr, size, base=0x180000, offset=0xc00000, data;
     //BootPrintEx("Uploading 512KB Kickstart ...");
     size = ((romfile.file.size)+511)>>9;
-    printf("File size: %d\r", size);
+    printf("File size: %d KB (%d sectors)\r", romfile.file.size/1024, size);
 
     printf("[");
     for (i=0; i<size; i++) {
