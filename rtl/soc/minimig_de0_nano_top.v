@@ -17,20 +17,26 @@ module minimig_de0_nano_top (
   // clock inputs
   input                 CLOCK_50,     // 50 MHz
   // USB JTAG Link
+/*
   input                 TDI,          // CPLD -> FPGA (data in)
   input                 TCK,          // CPLD -> FPGA (clk)
   input                 TCS,          // CPLD -> FPGA (CS)
   output                TDO,          // FPGA -> CPLD (data out)
+*/
   // push button inputs
   input       [    1:0] KEY,          // Pushbutton[1:0]
+  // switch inputs
+  input       [    3:0] SW,           // Toggle Switch[3:0]
   // LED outputs
   output      [    7:0] LEDG,         // LED Green[7:0]
   // UART
   output                UART_TXD,     // UART Transmitter
   input                 UART_RXD,     // UART Receiver
   // I2C
+/*
   inout                 I2C_SDAT,     // I2C Data
   output                I2C_SCLK,     // I2C Clock
+*/
   // PS2
   inout                 PS2_DAT,      // PS2 Keyboard Data
   inout                 PS2_CLK,      // PS2 Keyboard Clock
@@ -46,12 +52,14 @@ module minimig_de0_nano_top (
   output      [  7:0]   VGA_G,        // VGA Green[7:0]
   output      [  7:0]   VGA_B,        // VGA Blue[7:0]
   // Audio CODEC
+/*
   inout                 AUD_ADCLRCK,  // Audio CODEC ADC LR Clock
   input                 AUD_ADCDAT,   // Audio CODEC ADC Data
   inout                 AUD_DACLRCK,  // Audio CODEC DAC LR Clock
   output                AUD_DACDAT,   // Audio CODEC DAC Data
   inout                 AUD_BCLK,     // Audio CODEC Bit-Stream Clock
   output                AUD_XCK,      // Audio CODEC Chip Clock
+ */
   // SD Card
   input                 SD_DAT,       // SD Card Data            - spi MISO
   output                SD_DAT3,      // SD Card Data 3          - spi CS
@@ -81,9 +89,10 @@ module minimig_de0_nano_top (
  */
   // MINIMIG specific
   input       [  6-1:0] Joya,         // joystick port A
-  input       [  6-1:0] Joyb,         // joystick port B
+  input       [  6-1:0] Joyb/*,         // joystick port B
   output                AUDIOLEFT,    // sigma-delta DAC output left
   output                AUDIORIGHT    // sigma-delta DAC output right
+*/
 );
 
 
@@ -228,8 +237,14 @@ wire           uart_sel;
 // input synchronizers                //
 ////////////////////////////////////////
 
-wire   sw_9, sw_8, sw_7, sw_6, sw_5, sw_4, sw_3, sw_2, sw_1;
+wire   sw_3, sw_2, sw_1, sw_0;
 wire   key_3, key_2, key_1, key_0;
+
+i_sync #(.DW(4)) i_sync_sw_28 (
+  .clk  (clk_28),
+  .i    ({SW[3], SW[2], SW[1], SW[0]}),
+  .o    ({sw_3, sw_2,  sw_1,  sw_0})
+);
 
 i_sync #(.DW(2)) i_sync_key_28 (
   .clk  (clk_28),
@@ -264,7 +279,7 @@ assign TDO              = 1'b1;
 
 // UART
 // uart_sel = 0 => minimig, uart_sel = 1 => or1k
-assign uart_sel         = 1;//sw_5;
+assign uart_sel         = sw_0;
 assign UART_TXD         = uart_sel ? ctrl_txd : minimig_txd;
 assign ctrl_rxd         = uart_sel ? UART_RXD : 1'b1;
 assign minimig_rxd      = uart_sel ? 1'b1     : UART_RXD;
@@ -298,7 +313,7 @@ assign AUDIORIGHT       = 1'b0;
 // ctrl
 assign SPI_DI           = !SPI_CS_N[0] ? SD_DAT : sdo;
 assign rst_ext          = !KEY[0];
-assign ctrl_cfg         = {sw_4, sw_3, sw_2, sw_1};
+assign ctrl_cfg         = {1'b0, 1'b0, 1'b0, 1'b0};
 
 // clock
 assign pll_in_clk       = CLOCK_50;
@@ -308,11 +323,11 @@ assign pll_rst          = !KEY[0];
 assign sdctl_rst        = pll_locked & KEY[0];
 
 // audio
-assign audio_lr_switch  = sw_7;
-assign audio_lr_mix     = sw_6;
+assign audio_lr_switch  = sw_2;
+assign audio_lr_mix     = sw_3;
 
 // minimig (VGA scandoubler)
-assign _15khz           = 1;//sw_9;
+assign _15khz           = sw_1;
 
 
 
