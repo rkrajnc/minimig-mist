@@ -88,8 +88,10 @@ set_location_assignment PIN_F3 -to LEDG[5]
 set_location_assignment PIN_B1 -to LEDG[6]
 set_location_assignment PIN_L3 -to LEDG[7]
 set_location_assignment PIN_R8 -to CLOCK_50
-#set_location_assignment PIN_H15 -to PS2_CLK
-#set_location_assignment PIN_J14 -to PS2_DAT
+set_location_assignment PIN_N16 -to PS2_CLK
+set_location_assignment PIN_K16 -to PS2_DAT
+set_location_assignment PIN_L15 -to PS2_MCLK
+set_location_assignment PIN_P16 -to PS2_MDAT
 set_location_assignment PIN_C16 -to UART_RXD
 set_location_assignment PIN_D15 -to UART_TXD
 #set_location_assignment PIN_E8 -to TDI
@@ -290,10 +292,6 @@ set_location_assignment PIN_J14 -to SD_DAT3
 #set_location_assignment PIN_C19 -to IDE_DB[12]
 #GPIO_1[16]
 #set_location_assignment PIN_C20 -to IDE_DB[3]
-#GPIO_1[17]
-#set_location_assignment PIN_D19 -to PS2_MCLK
-#GPIO_1[18]
-#set_location_assignment PIN_D20 -to PS2_MDAT
 #GPIO_1[19]
 #set_location_assignment PIN_E20 -to Joyb[1]
 #GPIO_1[20]
@@ -413,8 +411,10 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LEDG[5]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LEDG[6]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LEDG[7]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to CLOCK_50
-#set_instance_assignment -name IO_STANDARD LVTTL -to PS2_CLK
-#set_instance_assignment -name IO_STANDARD LVTTL -to PS2_DAT
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to PS2_CLK
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to PS2_DAT
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to PS2_MCLK
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to PS2_MDAT
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to UART_RXD
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to UART_TXD
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SD_CMD
@@ -462,8 +462,6 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_RST
 #set_instance_assignment -name IO_STANDARD LVTTL -to AUD_DACDAT
 #set_instance_assignment -name IO_STANDARD LVTTL -to AUD_XCK
 #set_instance_assignment -name IO_STANDARD LVTTL -to AUD_BCLK
-#set_instance_assignment -name IO_STANDARD LVTTL -to PS2_MCLK
-#set_instance_assignment -name IO_STANDARD LVTTL -to PS2_MDAT
 #set_instance_assignment -name IO_STANDARD LVTTL -to Joy[0]
 #set_instance_assignment -name IO_STANDARD LVTTL -to Joy[1]
 #set_instance_assignment -name IO_STANDARD LVTTL -to Joy[2]

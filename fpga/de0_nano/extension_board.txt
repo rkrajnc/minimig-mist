@@ -33,12 +33,12 @@ GPIO1
 15:                                     16:
 17:                                     18:
 19:                                     20:
-21:                                     22:
-23:                                     24:
-25:                                     26:
-27:                                     28:
+21:                                     22: PS2_DAT        : PIN_K16
+23:                                     24: PS2_MCLK       : PIN_L15
+25:                                     26: PS2_MDAT       : PIN_P16
+27:                                     28: PS2_CLK        : PIN_N16
 29: VCC3P3                              30: GND
-31:                                     32:
+31:                                     32:                : PIN_P14
 33:                                     34: SD_DAT  (MISO) : PIN_N14
 35:                                     36: SD_CLK  (SCLK) : PIN_L13
 37:                                     38: SD_CMD  (MOSI) : PIN_K15
