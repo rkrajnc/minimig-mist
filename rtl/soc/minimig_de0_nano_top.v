@@ -89,10 +89,9 @@ module minimig_de0_nano_top (
  */
   // MINIMIG specific
   input       [  6-1:0] Joya,         // joystick port A
-  input       [  6-1:0] Joyb/*,         // joystick port B
+  input       [  6-1:0] Joyb,         // joystick port B
   output                AUDIOLEFT,    // sigma-delta DAC output left
   output                AUDIORIGHT    // sigma-delta DAC output right
-*/
 );
 
 
@@ -301,10 +300,9 @@ assign FL_DQ            = FL_OE_N   ? FL_DAT_W   : 8'bzzzzzzzz;
 assign FL_DAT_R         = FL_DQ;
 
 // AUDIO
-//`define MINIMIG_SERIAL_AUDIO
 `ifdef MINIMIG_SERIAL_AUDIO
-assign AUDIOLEFT        = audio_left;
-assign AUDIORIGHT       = audio_right;
+assign AUDIOLEFT        = audio_lr_switch ? audio_right : audio_left;
+assign AUDIORIGHT       = audio_lr_switch ? audio_left : audio_right;
 `else
 assign AUDIOLEFT        = 1'b0;
 assign AUDIORIGHT       = 1'b0;
@@ -629,10 +627,10 @@ Minimig1 minimig (
   .cts          (1'b0             ), // RS232 clear to send
   .rts          (                 ), // RS232 request to send
   //I/O
-  ._joy1        ({6{1'b1}}/*SJK: Joya*/             ), // joystick 1 [fire2,fire,up,down,left,right] (default mouse port)
-  ._joy2        ({6{1'b1}}/*SJK: Joyb*/             ), // joystick 2 [fire2,fire,up,down,left,right] (default joystick port)
-  .mouse_btn1   (key_3            ), // mouse button 1
-  .mouse_btn2   (key_2            ), // mouse button 2
+  ._joy1        (Joya             ), // joystick 1 [fire2,fire,up,down,left,right] (default mouse port)
+  ._joy2        (Joyb             ), // joystick 2 [fire2,fire,up,down,left,right] (default joystick port)
+  .mouse_btn1   (1'b1             ), // mouse button 1
+  .mouse_btn2   (1'b1             ), // mouse button 2
   ._15khz       (_15khz           ), // scandoubler disable
   .msdat        (PS2_MDAT         ), // PS2 mouse data
   .msclk        (PS2_MCLK         ), // PS2 mouse clk

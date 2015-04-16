@@ -135,6 +135,20 @@ set_location_assignment PIN_D11 -to VGA_RST
 #set_location_assignment PIN_B5 -to AUD_DACDAT
 #set_location_assignment PIN_B4 -to AUD_XCK
 #set_location_assignment PIN_A4 -to AUD_BCLK
+set_location_assignment PIN_R10 -to AUDIOLEFT
+set_location_assignment PIN_T13 -to AUDIORIGHT
+set_location_assignment PIN_T10 -to Joya[0]
+set_location_assignment PIN_R12 -to Joya[1]
+set_location_assignment PIN_T14 -to Joya[2]
+set_location_assignment PIN_N12 -to Joya[3]
+set_location_assignment PIN_M10 -to Joya[4]
+set_location_assignment PIN_P11 -to Joya[5]
+set_location_assignment PIN_N15 -to Joyb[0]
+set_location_assignment PIN_R14 -to Joyb[1]
+set_location_assignment PIN_R16 -to Joyb[2]
+set_location_assignment PIN_N9 -to Joyb[3]
+set_location_assignment PIN_L16 -to Joyb[4]
+set_location_assignment PIN_L14 -to Joyb[5]
 set_location_assignment PIN_P2 -to DRAM_ADDR[0]
 set_location_assignment PIN_N5 -to DRAM_ADDR[1]
 set_location_assignment PIN_N6 -to DRAM_ADDR[2]
@@ -257,10 +271,6 @@ set_location_assignment PIN_J14 -to SD_DAT3
 #GPIO_0[34]
 #set_location_assignment PIN_L18 -to Joy[4]
 #GPIO_0[35]
-#GPIO_1[0]
-#set_location_assignment PIN_H12 -to AUDIOLEFT
-#GPIO_1[1]
-#set_location_assignment PIN_H13 -to AUDIORIGHT
 #set_location_assignment PIN_H14 -to IDE_DB[7]
 #GPIO_1[2]
 #set_location_assignment PIN_G15 -to IDE_DB[8]
@@ -293,36 +303,6 @@ set_location_assignment PIN_J14 -to SD_DAT3
 #GPIO_1[16]
 #set_location_assignment PIN_C20 -to IDE_DB[3]
 #GPIO_1[19]
-#set_location_assignment PIN_E20 -to Joyb[1]
-#GPIO_1[20]
-#set_location_assignment PIN_F20 -to Joyb[5]
-#GPIO_1[21]
-#set_location_assignment PIN_E19 -to Joyb[2]
-#GPIO_1[22]
-#set_location_assignment PIN_E18 -to Joyb[0]
-#GPIO_1[23]
-#set_location_assignment PIN_G20 -to Joyb[3]
-#GPIO_1[24]
-#set_location_assignment PIN_G18 -to Joyb[4]
-#GPIO_1[25]
-#set_location_assignment PIN_G17 -to Joya[6]
-#GPIO_1[26]
-#set_location_assignment PIN_H17 -to Joyb[6]
-#GPIO_1[27]
-#set_location_assignment PIN_J15 -to Joya[0]
-#GPIO_1[28]
-#set_location_assignment PIN_H18 -to Joya[5]
-#GPIO_1[29]
-#set_location_assignment PIN_N22 -to Joya[1]
-#GPIO_1[30]
-#set_location_assignment PIN_N21 -to GPIO_1[31]
-#set_location_assignment PIN_P15 -to Joya[2]
-#GPIO_1[32]
-#set_location_assignment PIN_N15 -to GPIO_1[33]
-#set_location_assignment PIN_P17 -to Joya[3]
-#GPIO_1[34]
-#set_location_assignment PIN_P18 -to Joya[4]
-#GPIO_1[35]
 
 #set_instance_assignment -name IO_STANDARD LVTTL -to GPIO_0[0]
 #set_instance_assignment -name IO_STANDARD LVTTL -to GPIO_0[1]
@@ -412,9 +392,13 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LEDG[6]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LEDG[7]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to CLOCK_50
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to PS2_CLK
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to PS2_CLK
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to PS2_DAT
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to PS2_DAT
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to PS2_MCLK
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to PS2_MCLK
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to PS2_MDAT
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to PS2_MDAT
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to UART_RXD
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to UART_TXD
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SD_CMD
@@ -462,6 +446,32 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_RST
 #set_instance_assignment -name IO_STANDARD LVTTL -to AUD_DACDAT
 #set_instance_assignment -name IO_STANDARD LVTTL -to AUD_XCK
 #set_instance_assignment -name IO_STANDARD LVTTL -to AUD_BCLK
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to AUDIOLEFT
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to AUDIORIGHT
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to Joya[0]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to Joya[0]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to Joya[1]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to Joya[1]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to Joya[2]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to Joya[2]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to Joya[3]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to Joya[3]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to Joya[4]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to Joya[4]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to Joya[5]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to Joya[5]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to Joyb[0]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to Joyb[0]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to Joyb[1]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to Joyb[1]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to Joyb[2]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to Joyb[2]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to Joyb[3]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to Joyb[3]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to Joyb[4]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to Joyb[4]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to Joyb[5]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to Joyb[5]
 #set_instance_assignment -name IO_STANDARD LVTTL -to Joy[0]
 #set_instance_assignment -name IO_STANDARD LVTTL -to Joy[1]
 #set_instance_assignment -name IO_STANDARD LVTTL -to Joy[2]
