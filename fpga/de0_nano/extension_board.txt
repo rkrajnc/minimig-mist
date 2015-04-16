@@ -29,7 +29,7 @@ GPIO1
 07:                   : PIN_R13         08:                : PIN_T12
 09: Joya[1] (left)    : PIN_R12         10:
 11: VCC_SYS                             12: GND
-13: Joya[0] (right)   : PIN_T10         14:
+13:                   : PIN_T10         14:
 15: Joya[5] (button2) : PIN_P11         16: AUDIOLEFT      : PIN_R10
 17: Joya[3] (up)      : PIN_N12         18:                : PIN_P9
 19: Joyb[3] (up)      : PIN_N9          20:                : PIN_N11
@@ -41,7 +41,7 @@ GPIO1
 31: Joyb[0] (right)   : PIN_N15         32:                : PIN_P14
 33: Joyb[5] (button2) : PIN_L14         34: SD_DAT  (MISO) : PIN_N14
 35: Joya[4] (button)  : PIN_M10         36: SD_CLK  (SCLK) : PIN_L13
-37:                                     38: SD_CMD  (MOSI) : PIN_K15
+37: Joya[0] (right)   : PIN_J16         38: SD_CMD  (MOSI) : PIN_K15
 39:                                     40: SD_DAT3 (CS)   : PIN_J14
 
 JP3
