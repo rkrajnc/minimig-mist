@@ -4,6 +4,8 @@
 #define ROM_START 0x000000
 #define RAM_START 0x400000
 
+#define REG_SYS_STAT_ADR 0x800008
+
 .extern		__stack
 .extern		__data_start
 .extern		__data_end
@@ -95,7 +97,17 @@ rom_copy_end:
 */
 
 .section .text, "ax"
-  
+  // Wait for SDRAM to be ready
+  // while ((read32(REG_SYS_STAT_ADR) & 0x1));
+  l.movhi r2, hi(REG_SYS_STAT_ADR)
+  l.ori   r2, r2, lo(REG_SYS_STAT_ADR)
+1:
+  l.lwz   r3, 0(r2)
+  l.andi  r3, r3, 1
+  l.sfeqi r3, 1
+  l.bf    1b
+   l.nop
+
   // bss initialization
   l.movhi r2, hi(__bss_start)
   l.ori   r2,r2,lo(__bss_start)
