@@ -141,9 +141,9 @@ wire           dram_err;
 wire [ 23-1:0] bridge_adr;
 wire           bridge_cs;
 wire           bridge_we;
-wire [  2-1:0] bridge_sel;
-wire [ 16-1:0] bridge_dat_w;
-wire [ 16-1:0] bridge_dat_r;
+wire [  4-1:0] bridge_sel;
+wire [ 32-1:0] bridge_dat_w;
+wire [ 32-1:0] bridge_dat_r;
 wire           bridge_ack;
 wire           bridge_err;
 
@@ -379,7 +379,7 @@ ctrl_top ctrl_top (
 );
 
 
-//// qmem async 32-to-16 bridge ////
+//// qmem async 32-to-32 bridge ////
 `define CTRL_SDRAM_BRIDGE
 `ifdef CTRL_SDRAM_BRIDGE
 qmem_bridge #(
@@ -387,8 +387,8 @@ qmem_bridge #(
   .MSW (4 ),
   .MDW (32),
   .SAW (23),
-  .SSW (2 ),
-  .SDW (16)
+  .SSW (4 ),
+  .SDW (32)
 ) qmem_bridge (
   // master
   .m_clk        (clk_50           ),
@@ -401,7 +401,7 @@ qmem_bridge #(
   .m_ack        (dram_ack         ),
   .m_err        (dram_err         ),
   // slave
-  .s_clk        (clk_7            ),
+  .s_clk        (clk_114          ),
   .s_adr        (bridge_adr       ),
   .s_cs         (bridge_cs        ),
   .s_we         (bridge_we        ),
@@ -417,8 +417,8 @@ assign dram_err = 1'b0;
 assign bridge_adr = 23'hxxxxxx;
 assign bridge_cs = 1'b0;
 assign bridge_we = 1'bx;
-assign bridge_sel = 2'bxx;
-assign bridge_dat_w = 16'hxxxx;
+assign bridge_sel = 4'bxx;
+assign bridge_dat_w = 32'hxxxx;
 `endif // CTRL_SDRAM_BRIDGE
 
 

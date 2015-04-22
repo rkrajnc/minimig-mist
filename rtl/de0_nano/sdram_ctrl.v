@@ -49,9 +49,9 @@ module sdram_ctrl(
   input  wire           host_cs,
   input  wire [ 25-1:0] host_adr,
   input  wire           host_we,
-  input  wire [  2-1:0] host_bs,
-  input  wire [ 16-1:0] host_wdat,
-  output reg  [ 16-1:0] host_rdat,
+  input  wire [  4-1:0] host_bs,
+  input  wire [ 32-1:0] host_wdat,
+  output reg  [ 32-1:0] host_rdat,
   output wire           host_ack,
   // chip
   input  wire    [23:1] chipAddr,
@@ -114,7 +114,6 @@ reg  [ 25-1:0] casaddr;
 reg            sdwrite;
 reg  [ 16-1:0] sdata_reg;
 reg            hostCycle;
-reg            zena;
 reg            cena;
 reg  [ 64-1:0] ccache;
 reg  [ 25-1:0] ccache_addr;
@@ -136,7 +135,6 @@ reg  [  4-1:0] sdram_state;
 wire [  2-1:0] pass;
 wire [  4-1:0] tst_adr1;
 wire [  4-1:0] tst_adr2;
-
 
 // CPU states
 //             [5]    [4:3]              [2]   [1:0]
@@ -174,30 +172,60 @@ assign reset_out = init_done;
 ////////////////////////////////////////
 // host access
 ////////////////////////////////////////
+reg        host_write_ack;
+reg [15:0] host_cache [3:0];
+reg [24:3] host_cache_addr;
+reg        host_cache_valid;
+wire       host_cache_hit;
+reg [2:1]  burst_addr;
 
-assign host_ack = zena;
+assign host_ack = host_write_ack | host_cache_hit & !host_we & host_cs;
 
 always @ (posedge sysclk or negedge reset) begin
-  if (~reset) begin
-    zena <= 1'b0;
-  end else begin
-    if (sdram_state == ph1) begin
-      zena <= #1 1'b0;
+  if (!reset)
+    host_write_ack <= 0;
+  else
+    host_write_ack <= (sdram_state == ph5) & hostCycle & host_we;
+end
+
+always @(*) begin
+  host_rdat[31:16] = host_cache[{host_adr[2],1'b0}];
+  host_rdat[15:0]  = host_cache[{host_adr[2],1'b1}];
+end
+
+assign host_cache_hit = (host_cache_addr == host_adr[24:3]) & host_cache_valid;
+
+always @ (posedge sysclk or negedge reset) begin
+  if (!reset) begin
+    host_cache_valid <= 0;
+  end else if (!cas_sd_we) begin
+    // Keep the cache coherent on writes
+    if (sdram_state == ph5 && host_cache_addr == casaddr[24:3]) begin
+      if (!dqm[1])
+        host_cache[casaddr[2:1]][15:8] <= datawr[15:8];
+      if (!dqm[0])
+        host_cache[casaddr[2:1]][7:0] <= datawr[7:0];
     end
-    if ((sdram_state == ph11) && hostCycle) begin
-      if ((host_adr == casaddr[24:0]) && !cas_sd_cas) begin
-        zena <= #1 1'b1;
-      end
+    if (sdram_state == ph6 && host_cache_addr == casaddr[24:3]) begin
+      if (!dqm[1])
+        host_cache[casaddr[2:1]+1][15:8] <= datawr[15:8];
+      if (!dqm[0])
+        host_cache[casaddr[2:1]+1][7:0] <= datawr[7:0];
+    end
+  end else if (hostCycle) begin
+    // Refill cache
+    if (sdram_state == ph2) begin
+      burst_addr <= casaddr[2:1];
+      host_cache_valid <= 0;
+    end else if (sdram_state > ph7 && sdram_state < ph12) begin
+      host_cache_addr <= casaddr[24:3];
+      host_cache[burst_addr] <= sdata;
+      burst_addr <= burst_addr + 1;
+      if (sdram_state == ph11)
+        host_cache_valid <= 1;
     end
   end
 end
-
-always @ (posedge sysclk) begin
-  if ((sdram_state == ph9) && hostCycle) begin
-    host_rdat <= sdata_reg;
-  end
-end
-
 
 ////////////////////////////////////////
 // cpu cache
@@ -286,9 +314,11 @@ always @ (posedge sysclk) begin
     end else if (cpuCycle) begin
       datawr <= cpuWR;
     end else begin
-      datawr <= host_wdat;
+      datawr <= host_wdat[31:16];
     end
   end
+  if (sdram_state == ph5 && hostCycle)
+    datawr <= host_wdat[15:0];
 end
 
 // write / read control
@@ -467,7 +497,8 @@ always @ (posedge sysclk) begin
         sd_cas <= 1'b0;
         sd_we  <= 1'b0;
         //sdaddr <= 12b001000100010; // BURST=4 LATENCY=2
-        sdaddr <= 13'b0001000110010; // BURST=4 LATENCY=3
+        //sdaddr <= 13'b0001000110010; // BURST=4 LATENCY=3
+        sdaddr <= 13'b0000000110010; // BURST=4 LATENCY=3, write burst
         //sdaddr <= 12'b001000110000; // noBURST LATENCY=3
       end
       default : begin
@@ -497,18 +528,7 @@ always @ (posedge sysclk) begin
         casaddr    <= {1'b0,chipAddr,1'b0};
         cas_sd_cas <= 1'b0;
         cas_sd_we  <= chipRW;
-      end else if (host_cs && !host_ack) begin
-        // host cycle
-        hostCycle  <= 1'b1;
-        sdaddr     <= host_adr[21:9];
-        ba         <= host_adr[23:22];
-        cas_dqm    <= ~host_bs;
-        sd_cs      <= 4'b1110; // active
-        sd_ras     <= 1'b0;
-        casaddr    <= host_adr;
-        cas_sd_cas <= 1'b0;
-        cas_sd_we  <= !host_we;
-      end else if (cpu_cs) begin
+      end else if (cpu_cs & !(cpuCycle & (host_cs & !host_ack))) begin
         // cpu cycle
         cpuCycle   <= 1'b1;
         sdaddr     <= cpuAddr[21:9];
@@ -519,6 +539,17 @@ always @ (posedge sysclk) begin
         casaddr    <= {cpuAddr[24:1],1'b0};
         cas_sd_cas <= 1'b0;
         cas_sd_we  <= ~cpustate[1] | ~cpustate[0];
+      end else if (host_cs && !host_ack) begin
+        // host cycle
+        hostCycle  <= 1'b1;
+        sdaddr     <= host_adr[21:9];
+        ba         <= host_adr[23:22];
+        cas_dqm    <= ~host_bs[3:2];
+        sd_cs      <= 4'b1110; // active
+        sd_ras     <= 1'b0;
+        casaddr    <= host_adr;
+        cas_sd_cas <= 1'b0;
+        cas_sd_we  <= !host_we;
       end else begin
         // refresh cycle
         sd_cs      <= 4'b0000; // autorefresh
@@ -535,6 +566,14 @@ always @ (posedge sysclk) begin
       sd_cas  <= cas_sd_cas;
       sd_we   <= cas_sd_we;
     end
+    if (sdram_state == ph5 && !cas_sd_we) begin
+       dqm <= hostCycle ? ~host_bs[1:0] : 2'b11;
+    end
+    // Do not write the two last words in the write burst
+    if ((sdram_state == ph6 || sdram_state == ph7) && !cas_sd_we) begin
+       dqm <= 2'b11;
+    end
+
   end
 end
 
