@@ -29,7 +29,7 @@ package TG68K_Pack is
 						  st_AnXn1, st_AnXn2, bra1, bsr1, bsr2, nopnop, dbcc1, movem1, movem2, movem3,
 						  andi, op_AxAy, cmpm, link1, link2, unlink1, unlink2, int1, int2, int3, int4, rte1, rte2, rte3, trap0, trap1, trap2, trap3,
 						  movec1, movep1, movep2, movep3, movep4, movep5, rota1, bf1,
-						  mul1, mul2, mul_end1,  mul_end2, div1, div2, div3, div4, div_end1, div_end2);
+						  mul1, mul2, mul_end1,  mul_end2, div1, div2, div3, div4, div_end1, div_end2, pack1, pack2, pack3);
 
 	constant opcMOVE        : integer := 0; --
 	constant opcMOVEQ       : integer := 1; --
@@ -109,6 +109,10 @@ package TG68K_Pack is
 	constant opcBF          : integer := 75; --
 	constant opcBFwb        : integer := 76; --
 	constant s2nd_hbits     : integer := 77; --
+  constant opcPACK        : integer := 77; --
+-- constant s2nd_hbits     : integer := 77; --
+
+
 --      constant    : integer := 75; --
 --      constant         : integer := 76; --
 --      constant         : integer := 7; --

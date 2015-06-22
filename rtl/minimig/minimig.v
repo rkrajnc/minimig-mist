@@ -160,6 +160,7 @@ module minimig
 	output	_cpu_dtack,			// m68k data acknowledge
 	output	_cpu_reset,			// m68k reset
   input [31:0] cpu_vbr, // m68k VBR
+  output wire ovr,      // NMI address decoding override
 	//sram pins
 	output	[15:0] ram_data,	//sram data bus
 	input	[15:0] ramdata_in,		//sram data bus in
@@ -228,6 +229,7 @@ module minimig
   output  [3:0] cpu_config,
   output  [5:0] memcfg,
   output  turbochipram,
+  output  turbokick,
   output  init_b,       // vertical sync for MCU (sync OSD update)
   output wire fifo_full,
   // fifo / track display
@@ -355,7 +357,7 @@ wire cpuhlt;
 wire	int7;					//int7 interrupt request from Action Replay
 wire	[2:0] _iplx;			//interrupt request lines from Paula
 wire	sel_cart;				//Action Replay RAM select
-wire	ovr;					//overide chip memmory decoding
+//wire	ovr;					//overide chip memmory decoding
 wire  [16-1:0] cart_data_out;
 
 wire	usrrst;					//user reset from osd interface
@@ -428,7 +430,11 @@ assign pwrled = (_led & (led_dim | ~turbo)) ? 1'b0 : 1'b1; // led dim at off-sta
 
 assign memcfg = memory_config;
 
-assign turbochipram = !ovl && chipset_config[4];
+// turbo chipram only when no overlay is active, cpu_config[2] (fast chip) enabled and chipRAM=2MB
+assign turbochipram = !ovl && cpu_config[2] && (&memory_config[1:0]);
+
+// turbo kickstart only when no overlay is active and cpu_config[3] (fast kick) enabled
+assign turbokick = !ovl && cpu_config[3];
 
 // NTSC/PAL switching is controlled by OSD menu, change requires reset to take effect
 always @(posedge clk)
@@ -624,6 +630,16 @@ userio USERIO1
 
 //assign cpu_speed = (chipset_config[0] & ~int7 & ~freeze & ~ovr);
 assign cpu_speed = 1'b0;
+
+/*
+// debug module
+debug DEBUG1 (
+  .clk        (clk),
+  .clk7_en    (clk7_en),
+  .adr        (reg_address),
+  .dat        (custom_data_in)
+);
+*/
 
 //instantiate Denise
 denise DENISE1
@@ -821,6 +837,7 @@ cart CART1
 (
   .clk            (clk            ),
   .clk7_en        (clk7_en        ),
+  .clk7n_en       (clk7n_en       ),
   .cpu_rst        (!_cpu_reset    ),
   .cpu_address    (cpu_address    ),
   .cpu_address_in (cpu_address_out),
@@ -829,6 +846,8 @@ cart CART1
   .cpu_hwr        (cpu_hwr        ),
   .cpu_lwr        (cpu_lwr        ),
   .cpu_vbr        (cpu_vbr        ),
+  .reg_address_in (reg_address    ),
+  .reg_data_in    (custom_data_in ),
   .dbr            (dbr            ),
   .ovl            (ovl            ),
   .freeze         (freeze         ),

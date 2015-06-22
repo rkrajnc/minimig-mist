@@ -91,9 +91,8 @@ const char *config_dither_msg[] = {"off", "SPT", "RND", "S+R"};
 const char *config_memory_fast_msg[] = {"none  ", "2.0 MB", "4.0 MB","24.0 MB","24.0 MB"};
 const char *config_cpu_msg[] = {"68000 ", "68010", "-----","68020"};
 const char *config_hdf_msg[] = {"Disabled", "Hardfile (disk img)", "MMC/SD card", "MMC/SD partition 1", "MMC/SD partition 2", "MMC/SD partition 3", "MMC/SD partition 4"};
-
 const char *config_chipset_msg[] = {"OCS-A500", "OCS-A1000", "ECS", "---", "---", "---", "AGA", "---"};
-
+const char *config_turbo_msg[] = {"none", "CHIPRAM", "KICK", "BOTH"};
 char *config_autofire_msg[] = {"        AUTOFIRE OFF", "        AUTOFIRE FAST", "        AUTOFIRE MEDIUM", "        AUTOFIRE SLOW"};
 
 enum HelpText_Message {HELPTEXT_NONE,HELPTEXT_MAIN,HELPTEXT_HARDFILE,HELPTEXT_CHIPSET,HELPTEXT_MEMORY,HELPTEXT_VIDEO};
@@ -102,11 +101,7 @@ const char *helptexts[]={
 	"                                Welcome to Minimig!  Use the cursor keys to navigate the menus.  Use space bar or enter to select an item.  Press Esc or F12 to exit the menus.  Joystick emulation on the numeric keypad can be toggled with the numlock key, while pressing Ctrl-Alt-0 (numeric keypad) toggles autofire mode.",
 	"                                Minimig can emulate an A600 IDE harddisk interface.  The emulation can make use of Minimig-style hardfiles (complete disk images) or UAE-style hardfiles (filesystem images with no partition table).  It is also possible to use either the entire SD card or an individual partition as an emulated harddisk.",
 	"                                Minimig's processor core can emulate a 68000 or 68020 processor (though the 68020 mode is still experimental.)  If you're running software built for 68000, there's no advantage to using the 68020 mode, since the 68000 emulation runs just as fast.",
-#ifdef ACTIONREPLAY_BROKEN
-	"                                Minimig can make use of up to 2 megabytes of Chip RAM, up to 1.5 megabytes of Slow RAM (A500 Trapdoor RAM), and up to 8 megabytes of true Fast RAM.",
-#else
-	"                                Minimig can make use of up to 2 megabytes of Chip RAM, up to 1.5 megabytes of Slow RAM (A500 Trapdoor RAM), and up to 8 megabytes of true Fast RAM.  To use the Action Replay feature you will need an Action Replay 3 ROM file on the SD card, named AR3.ROM.  You will also need to set Fast RAM to no more than 2 megabytes.",
-#endif
+	"                                Minimig can make use of up to 2 megabytes of Chip RAM, up to 1.5 megabytes of Slow RAM (A500 Trapdoor RAM), and up to 24 megabytes of true Fast RAM.  To use the HRTmon feature you will need a file on the SD card named hrtmon.rom.",
 	"                                Minimig's video features include a blur filter, to simulate the poorer picture quality on older monitors, and also scanline generation to simulate the appearance of a screen with low vertical resolution.",
 	0
 };
@@ -363,23 +358,28 @@ void HandleUI(void)
         /******************************************************************/
 
     case MENU_ARCHIE_MAIN1: {
-	menumask=0x0f;
+	menumask=0x3f;
 	OsdSetTitle("ARCHIE", 0);
 
-	OsdWrite(0, "", 0,0);
+	strcpy(s, " Floppy 0: ");
+	strcat(s, archie_get_floppy_name(0));
+	OsdWrite(0, s, menusub == 0, 0);
+
+	strcpy(s, " Floppy 1: ");
+	strcat(s, archie_get_floppy_name(1));
+	OsdWrite(1, s, menusub == 1, 0);
 
 	strcpy(s, " OS ROM: ");
 	strcat(s, archie_get_rom_name());
-	OsdWrite(1, s, menusub == 0, 0);
+	OsdWrite(2, s, menusub == 2, 0);
 	
-	OsdWrite(2, "", 0,0);
 	OsdWrite(3, "", 0,0);
 
 	// the following is exactly like the atatri st core
-        OsdWrite(4, " Firmware & Core           \x16", menusub == 1,0);
-        OsdWrite(5, " Save config                ", menusub == 2,0);
+        OsdWrite(4, " Firmware & Core           \x16", menusub == 3,0);
+        OsdWrite(5, " Save config                ", menusub == 4,0);
 	OsdWrite(6, "", 0,0);
-        OsdWrite(7, STD_EXIT, menusub == 3,0);
+        OsdWrite(7, STD_EXIT, menusub == 5,0);
 
         menustate = MENU_ARCHIE_MAIN2;
 	parentstate=MENU_ARCHIE_MAIN1;
@@ -391,21 +391,30 @@ void HandleUI(void)
 	  menustate = MENU_NONE1;
 	if(select) {
 	  switch(menusub) {
-	  case 0:  // Load ROM
+	  case 0:  // Floppy 0
+	  case 1:  // Floppy 1
+	    if(archie_floppy_is_inserted(menusub)) {
+	      archie_set_floppy(menusub, NULL);
+	      menustate = MENU_ARCHIE_MAIN1;
+	    } else
+	      SelectFile("ADF", SCAN_DIR | SCAN_LFN, MENU_ARCHIE_MAIN_FILE_SELECTED, MENU_ARCHIE_MAIN1, 1);
+	    break;
+	    
+	  case 2:  // Load ROM
 	    SelectFile("ROM", SCAN_LFN, MENU_ARCHIE_MAIN_FILE_SELECTED, MENU_ARCHIE_MAIN1, 1);
 	    break;
 
-	  case 1:  // Firmware submenu
+	  case 3:  // Firmware submenu
 	    menustate = MENU_FIRMWARE1;
 	    menusub = 1;
 	    break;
 
-	  case 2:  // Save config
+	  case 4:  // Save config
 	    menustate = MENU_NONE1;
 	    archie_save_config();
 	    break;
 
-	  case 3:  // Exit
+	  case 5:  // Exit
 	    menustate = MENU_NONE1;
 	    break;
 	  }
@@ -413,15 +422,16 @@ void HandleUI(void)
         break;
 	
     case MENU_ARCHIE_MAIN_FILE_SELECTED : // file successfully selected
-        archie_set_rom(&file);
-	// close menu afterwards
-	menustate = MENU_NONE1;
-	break;
-
-        /******************************************************************/
-        /* 8 bit main menu                                                */
-        /******************************************************************/
-
+      if(menusub == 0) archie_set_floppy(0, &file);
+      if(menusub == 1) archie_set_floppy(1, &file);
+      if(menusub == 2) archie_set_rom(&file);
+      menustate = MENU_ARCHIE_MAIN1;
+      break;
+      
+      /******************************************************************/
+      /* 8 bit main menu                                                */
+      /******************************************************************/
+      
     case MENU_8BIT_MAIN1: {
         char entry=0;
 
@@ -448,6 +458,17 @@ void HandleUI(void)
 
 	  p = user_io_8bit_get_string(i);
 	  //	  iprintf("Option %d: %s\n", i-1, p);
+
+	  // check for 'F'ile strings
+	  if(p && (p[0] == 'F')) {
+	    strcpy(s, " Load *.");
+	    substrcpy(s+8, p, 1);
+	    OsdWrite(entry, s, menusub==entry, 0);
+
+	    // add bit in menu mask
+	    menumask = (menumask << 1) | 1;
+	    entry++;
+	  }
 
 	  // check for 'T'oggle strings
 	  if(p && (p[0] == 'T')) {
@@ -518,20 +539,27 @@ void HandleUI(void)
 	  } else {
 	    p = user_io_8bit_get_string(menusub + (fs_present?1:2));
 
-	    // determine which status bit is affected
-	    unsigned char mask = 1<<(p[1]-'0');
-	    unsigned char status = user_io_8bit_set_status(0,0);  // 0,0 gets status
+	    if(p[0] == 'F') {
+	      static char ext[4];
+	      substrcpy(ext, p, 1);
+	      while(strlen(ext) < 3) strcat(ext, " ");
+	      SelectFile(ext, SCAN_DIR | SCAN_LFN, MENU_8BIT_MAIN_FILE_SELECTED, MENU_8BIT_MAIN1, 1);
+	    } else {
+	      // determine which status bit is affected
+	      unsigned char mask = 1<<(p[1]-'0');
+	      unsigned char status = user_io_8bit_set_status(0,0);  // 0,0 gets status
 
-	    //	    iprintf("Option %s %x\n", p, status ^ mask);
+	      //	    iprintf("Option %s %x\n", p, status ^ mask);
 
-	    // change bit
-	    user_io_8bit_set_status(status ^ mask, mask);
+	      // change bit
+	      user_io_8bit_set_status(status ^ mask, mask);
 
-	    // ... and change it again in case of a toggle bit
-	    if(p[0] == 'T')
-	      user_io_8bit_set_status(status, mask);
+	      // ... and change it again in case of a toggle bit
+	      if(p[0] == 'T')
+		user_io_8bit_set_status(status, mask);
 
-	    menustate = MENU_8BIT_MAIN1;
+	      menustate = MENU_8BIT_MAIN1;
+	    }
 	  }
 	}
         else if (right)
@@ -542,7 +570,8 @@ void HandleUI(void)
         break;
 	
     case MENU_8BIT_MAIN_FILE_SELECTED : // file successfully selected
-	user_io_file_tx(&file);
+        // this assumes that further file entries only exist if the first one also exists
+        user_io_file_tx(&file, menusub+1);
 	// close menu afterwards
 	menustate = MENU_NONE1;
 	break;
@@ -1743,23 +1772,25 @@ void HandleUI(void)
         strcpy(s, "         CPU : ");
         strcat(s, config_cpu_msg[config.cpu & 0x03]);
         OsdWrite(1, s, menusub == 0,0);
+        strcpy(s, "       Turbo : ");
+        strcat(s, config_turbo_msg[(config.cpu >> 2) & 0x03]);
+        OsdWrite(2, s, menusub == 1,0);
         strcpy(s, "       Video : ");
         strcat(s, config.chipset & CONFIG_NTSC ? "NTSC" : "PAL");
-        OsdWrite(2, s, menusub == 1,0);
-        strcpy(s, "     Chipset : ");
-	strcat(s, config_chipset_msg[(config.chipset >> 2) & (minimig_v1()?3:7)]);
         OsdWrite(3, s, menusub == 2,0);
-        OsdWrite(4, "", 0,0);
+        strcpy(s, "     Chipset : ");
+        strcat(s, config_chipset_msg[(config.chipset >> 2) & (minimig_v1()?3:7)]);
+        OsdWrite(4, s, menusub == 3,0);
         OsdWrite(5, "", 0,0);
         OsdWrite(6, "", 0,0);
-        OsdWrite(7, STD_EXIT, menusub == 3,0);
+        OsdWrite(7, STD_EXIT, menusub == 4,0);
 
         menustate = MENU_SETTINGS_CHIPSET2;
         break;
 
     case MENU_SETTINGS_CHIPSET2 :
 
-        if (down && menusub < 3)
+        if (down && menusub < 4)
         {
             menusub++;
             menustate = MENU_SETTINGS_CHIPSET1;
@@ -1776,48 +1807,57 @@ void HandleUI(void)
             if (menusub == 0)
             {
                 menustate = MENU_SETTINGS_CHIPSET1;
-                config.cpu += 1; 
-                if ((config.cpu & 0x03)==0x02)
-					config.cpu += 1; 
+                int _config_cpu = config.cpu & 0x3;
+                _config_cpu += 1; 
+                if (_config_cpu==0x02) _config_cpu += 1;
+                config.cpu = (config.cpu & 0xfc) | (_config_cpu & 0x3);
                 ConfigCPU(config.cpu);
             }
             else if (menusub == 1)
+            {
+                menustate = MENU_SETTINGS_CHIPSET1;
+                int _config_turbo = (config.cpu >> 2) & 0x3;
+                _config_turbo += 1;
+                config.cpu = (config.cpu & 0x3) | ((_config_turbo & 0x3) << 2);
+                ConfigCPU(config.cpu);
+            }
+
+            else if (menusub == 2)
             {
                 config.chipset ^= CONFIG_NTSC;
                 menustate = MENU_SETTINGS_CHIPSET1;
                 ConfigChipset(config.chipset);
             }
-            else if (menusub == 2)
+            else if (menusub == 3)
             {
-	        if(minimig_v1()) 
-		{
-		    if (config.chipset & CONFIG_ECS)
-		        config.chipset &= ~(CONFIG_ECS|CONFIG_A1000);
-		    else
-		        config.chipset += CONFIG_A1000;
-		} 
-		else
-		{
-		    switch(config.chipset&0x1c) {
-		    case 0:
-		        config.chipset = (config.chipset&3) | CONFIG_A1000;
-			break;
-		    case CONFIG_A1000:
-		        config.chipset = (config.chipset&3) | CONFIG_ECS;
-			break;
-		    case CONFIG_ECS:
-		        config.chipset = (config.chipset&3) | CONFIG_AGA | CONFIG_ECS;
-			break;
-		    case (CONFIG_AGA|CONFIG_ECS):
-		        config.chipset = (config.chipset&3) | 0;
-			break;
-		    }
-		}
-
+              if(minimig_v1()) 
+              {
+                if (config.chipset & CONFIG_ECS)
+                  config.chipset &= ~(CONFIG_ECS|CONFIG_A1000);
+                else
+                  config.chipset += CONFIG_A1000;
+              } 
+              else
+              {
+                switch(config.chipset&0x1c) {
+                  case 0:
+                    config.chipset = (config.chipset&3) | CONFIG_A1000;
+                    break;
+                  case CONFIG_A1000:
+                    config.chipset = (config.chipset&3) | CONFIG_ECS;
+                    break;
+                  case CONFIG_ECS:
+                    config.chipset = (config.chipset&3) | CONFIG_AGA | CONFIG_ECS;
+                    break;
+                  case (CONFIG_AGA|CONFIG_ECS):
+                    config.chipset = (config.chipset&3) | 0;
+                    break;
+                  }
+              }
                 menustate = MENU_SETTINGS_CHIPSET1;
                 ConfigChipset(config.chipset);
             }
-            else if (menusub == 3)
+            else if (menusub == 4)
             {
                 menustate = MENU_MAIN2_1;
                 menusub = 2;
@@ -1852,33 +1892,28 @@ void HandleUI(void)
  		OsdSetTitle("Memory",OSD_ARROW_LEFT|OSD_ARROW_RIGHT);
 
         OsdWrite(0, "", 0,0);
-        strcpy(s, "      CHIP : ");
+        strcpy(s, "      CHIP  : ");
         strcat(s, config_memory_chip_msg[config.memory & 0x03]);
         OsdWrite(1, s, menusub == 0,0);
-        strcpy(s, "      SLOW : ");
+        strcpy(s, "      SLOW  : ");
         strcat(s, config_memory_slow_msg[config.memory >> 2 & 0x03]);
         OsdWrite(2, s, menusub == 1,0);
-        strcpy(s, "      FAST : ");
+        strcpy(s, "      FAST  : ");
         strcat(s, config_memory_fast_msg[config.memory >> 4 & 0x03]);
         OsdWrite(3, s, menusub == 2,0);
 
         OsdWrite(4, "", 0,0);
 
-        strcpy(s, "      ROM  : ");
+        strcpy(s, "      ROM   : ");
         if (config.kickstart.long_name[0])
             strncat(s, config.kickstart.long_name, sizeof(config.kickstart.long_name));
         else
             strncat(s, config.kickstart.name, sizeof(config.kickstart.name));
         OsdWrite(5, s, menusub == 3,0);
 
-#ifdef ACTIONREPLAY_BROKEN
-        OsdWrite(0, "", 0,0);
-		menumask&=0xef;	// Remove bit 4
-#else
-        strcpy(s, "      AR3  : ");
+        strcpy(s, "      HRTmon: ");
         strcat(s, config.disable_ar3 ? "disabled" : "enabled ");
-        OsdWrite(6, s, menusub == 4,config.memory&0x20);	// Grey out AR3 if more than 2MB fast memory
-#endif
+        OsdWrite(6, s, menusub == 4,0);
 
         OsdWrite(7, STD_EXIT, menusub == 5,0);
 
@@ -2532,7 +2567,7 @@ void HandleUI(void)
 	  menustate = MENU_MIST_MAIN1;
 	  break;
 	case CORE_TYPE_ARCHIE:
-	  menusub = 1;
+	  menusub = 3;
 	  menustate = MENU_ARCHIE_MAIN1;
 	  break;
 	case CORE_TYPE_8BIT:
@@ -2565,7 +2600,7 @@ void HandleUI(void)
 	    menustate = MENU_MIST_MAIN1;
 	    break;
 	  case CORE_TYPE_ARCHIE:
-	    menusub = 1;
+	    menusub = 3;
 	    menustate = MENU_ARCHIE_MAIN1;
 	    break;
 	  case CORE_TYPE_8BIT:
@@ -2578,9 +2613,12 @@ void HandleUI(void)
       break;
 	
     case MENU_FIRMWARE_CORE_FILE_SELECTED :
+      // close OSD now as the new core may not even have one
       OsdDisable();
 
-      // close OSD now as the new core may not even have one
+      // reset minimig boot text position
+      BootHome();
+
       fpga_init(file.name);
 
       menustate = MENU_NONE1;

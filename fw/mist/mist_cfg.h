@@ -14,6 +14,9 @@
 //// type definitions ////
 typedef struct {
   uint8_t scandoubler_disable;
+  uint8_t mouse_boot_mode;
+  uint8_t joystick_ignore_hat;
+  uint8_t joystick_disable_shortcuts;
 } mist_cfg_t;
 
 

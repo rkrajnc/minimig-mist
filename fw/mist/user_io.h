@@ -32,6 +32,7 @@
 #define UIO_ETH_STATUS  0x0a
 #define UIO_ETH_FRM_IN  0x0b
 #define UIO_ETH_FRM_OUT 0x0c
+#define UIO_SERIAL_STAT 0x0d
 
 #define UIO_JOYSTICK2   0x10  // also used by minimig and 8 bit
 #define UIO_JOYSTICK3   0x11  // -"-
@@ -54,11 +55,14 @@
 #define UIO_SECTOR_RCV  0x52
 #define UIO_FILE_TX     0x53
 #define UIO_FILE_TX_DAT 0x54
+#define UIO_FILE_INDEX  0x55
+#define UIO_FILE_INFO   0x56
 
 #define JOY_RIGHT       0x01
 #define JOY_LEFT        0x02
 #define JOY_DOWN        0x04
 #define JOY_UP          0x08
+#define JOY_BTN_SHIFT   4
 #define JOY_BTN1        0x10
 #define JOY_BTN2        0x20
 #define JOY_BTN3        0x40
@@ -69,6 +73,20 @@
 #define BUTTON2         0x02
 #define SWITCH1         0x04
 #define SWITCH2         0x08
+
+// virtual gamepad buttons
+#define JOY_A      JOY_BTN1
+#define JOY_B      JOY_BTN2
+#define JOY_SELECT JOY_BTN3
+#define JOY_START  JOY_BTN4
+#define JOY_X      0x100
+#define JOY_Y      0x200
+#define JOY_L      0x400
+#define JOY_R      0x800
+#define JOY_L2     0x1000
+#define JOY_R2     0x2000
+#define JOY_L3     0x4000
+#define JOY_R3     0x8000
 
 #define CONF_SCANDOUBLER_DISABLE 0x10
 
@@ -85,6 +103,25 @@
 // user io status bits (currently only used by 8bit)
 #define UIO_STATUS_RESET   0x01
 
+#define UIO_STOP_BIT_1   0
+#define UIO_STOP_BIT_1_5 1
+#define UIO_STOP_BIT_2   2
+
+#define UIO_PARITY_NONE  0
+#define UIO_PARITY_ODD   1
+#define UIO_PARITY_EVEN  2
+#define UIO_PARITY_MARK  3
+#define UIO_PARITY_SPACE 4
+
+// serial status data type returned from the core 
+typedef struct {
+  uint32_t bitrate;        // 300, 600 ... 115200
+  uint8_t datasize;        // 5,6,7,8 ...
+  uint8_t parity;
+  uint8_t stopbits;
+  uint8_t fifo_stat;       // space in cores input fifo
+} __attribute__ ((packed)) serial_status_t;
+
 void user_io_init();
 void user_io_detect_core_type();
 unsigned char user_io_core_type();
@@ -99,9 +136,10 @@ void user_io_osd_key_enable(char);
 void user_io_serial_tx(char *, uint16_t);
 char *user_io_8bit_get_string(char);
 unsigned char user_io_8bit_set_status(unsigned char, unsigned char);
-void user_io_file_tx(fileTYPE *);
+void user_io_file_tx(fileTYPE *, unsigned char);
 void user_io_sd_set_config(void);
 char user_io_dip_switch1(void);
+char user_io_serial_status(serial_status_t *, uint8_t);
 
 // io controllers interface for FPGA ethernet emulation using usb ethernet
 // devices attached to the io controller (ethernec emulation)
@@ -116,5 +154,8 @@ void user_io_kbd(unsigned char m, unsigned char *k);
 char user_io_create_config_name(char *s);
 void user_io_digital_joystick(unsigned char, unsigned char);
 void user_io_analog_joystick(unsigned char, char, char);
+char user_io_osd_is_visible();
+
+void user_io_key_remap(char *);
 
 #endif // USER_IO_H

@@ -44,6 +44,7 @@ module userio_osd
   input  wire           host_ack
 );
 
+
 //local signals
 reg		[10:0] horbeam;			//horizontal beamcounter
 reg		[8:0] verbeam;			//vertical beamcounter
@@ -64,6 +65,7 @@ reg		[2:0] t_ide_config = 0;
 reg   [3:0] t_cpu_config = 0;
 reg   [4:0] t_chipset_config = 0;
 
+
 //--------------------------------------------------------------------------------------
 // memory configuration select signal
 //--------------------------------------------------------------------------------------
@@ -73,19 +75,20 @@ always @(posedge clk)
   if (clk7_en) begin
     if (reset)
     begin
-      chipset_config[1] <= t_chipset_config[1];
+      chipset_config <= t_chipset_config;
       ide_config <= t_ide_config;
-      cpu_config <= t_cpu_config;
+      cpu_config[1:0] <= t_cpu_config[1:0];
       memory_config <= t_memory_config;
     end
   end
 
 always @(posedge clk) begin
   if (clk7_en) begin
-    chipset_config[4:2] <= t_chipset_config[4:2];
-    chipset_config[0] <= t_chipset_config[0];
+    cpu_config[3:2] <= t_cpu_config[3:2];
   end
 end
+
+
 
 //--------------------------------------------------------------------------------------
 //OSD video generator
@@ -113,6 +116,7 @@ always @(posedge clk)
   		vpos[5:0] <= verbeam[5:0];
   end
 
+
 //--------------------------------------------------------------------------------------
 //generate osd video frame
 
@@ -139,6 +143,7 @@ always @(posedge clk)
   		vena <= vframe;
   end
 
+
 // combine..
 reg osd_enabled;
 always @(posedge clk)
@@ -157,11 +162,13 @@ always @(posedge clk)
   		invert <= 0;
   end
 
+
 //--------------------------------------------------------------------------------------
 
 //assign osd blank and pixel outputs
 assign osd_pixel = invert ^ (vena & bufout[vpos[2:0]]);
 assign osd_blank = osdframe;
+
 
 //--------------------------------------------------------------------------------------
 //video buffer
@@ -179,6 +186,7 @@ end
 
 always @(posedge clk)//output part
 	bufout[7:0] <= osdbuf[{vpos[5:3],horbeam[8]^horbeam[7],~horbeam[7],horbeam[6:1]}];
+
 
 //--------------------------------------------------------------------------------------
 //interface to host
@@ -215,10 +223,9 @@ always @ (posedge clk) begin
 end
 assign spi_invalidate = ~vld && vld_d;
 
-// OSD SPI commands:
-//
+// !!! OLD !!! OSD SPI commands:
  // 8'b00000000  NOP
-// 8'b001H0NNN  write data to osd buffer line <NNN> (H - highlight)
+ // 8'b001H0NNN  write data to osd buffer line <NNN> (H - highlight)
  // 8'b0100--KE  enable OSD display (E) and disable Amiga keyboard (K)
  // 8'b1000000B  reset Minimig (B - reset to bootloader)
  // 8'b100001AA  set autofire rate
@@ -252,6 +259,7 @@ assign spi_invalidate = ~vld && vld_d;
 // 8'b0_001_1100 | A_A_A_A B,B,... || write system memory, A - 32 bit memory address, B - variable number of bytes
 // 8'b1_000_1000 read RTL version
 
+
 // commands
 localparam [5:0]
   SPI_RESET_CTRL_ADR   = 6'b0_000_10,
@@ -269,6 +277,7 @@ localparam [5:0]
   SPI_VERSION_ADR      = 6'b1_000_10,
   SPI_MEM_READ_ADR     = 6'b1_001_11;
 
+
 // get command
 reg [5:0] cmd_dat = 6'h00;
 always @ (posedge clk) begin
@@ -277,6 +286,7 @@ always @ (posedge clk) begin
     //else if (spi_invalidate) cmd_dat <= #1 8'h00; // TODO!
   end
 end
+
 
 // data byte counter
 reg [2:0] dat_cnt = 3'h0;
@@ -288,6 +298,7 @@ always @ (posedge clk) begin
       dat_cnt <= #1 dat_cnt + 3'h1;
   end
 end
+
 
 // reg selects
 reg spi_reset_ctrl_sel    = 1'b0;
@@ -352,12 +363,13 @@ always @ (*) begin
     end
   endcase
 end
+
 // 8'b0_000_1000 | XXXXHRBC || reset control   | H - CPU halt, R - reset, B - reset to bootloader, C - reset control block
 // 8'b0_001_1000 | XXXXXXXX || clock control   | unused
 // 8'b0_010_1000 | XXXXXXKE || osd control     | K - disable Amiga keyboard, E - enable OSD
 // 8'b0_000_0100 | XXXGEANT || chipset config  | G - AGA, E - ECS, A - OCS A1000, N - NTSC, T - turbo
 // 8'b0_001_0100 | XXXXKCTT || cpu config      | K - fast kickstart enable, C - CPU cache enable, TT - CPU type (00=68k, 01=68k10, 10=68k20)
-// 8'b0_010_0100 | XXFFSSCC || memory config   | FF - fast, CC - chip, SS - slow
+// 8'b0_010_0100 | XXFFSSCC || memory config   | FF - fast, SS - slow, CC - chip
 // 8'b0_011_0100 | DDHHLLSS || video config    | DD - dither, HH - hires interp. filter, LL - lowres interp. filter, SS - scanline mode
 // 8'b0_100_0100 | XXXXXFFS || floppy config   | FF - drive number, S - floppy speed
 // 8'b0_101_0100 | XXXXXSMC || harddisk config | S - enable slave HDD, M - enable master HDD, C - enable HDD controler
@@ -365,6 +377,7 @@ end
 // 8'b0_000_1100 | XXXXXAAA_AAAAAAAA B,B,... || write OSD buffer, AAAAAAAAAAA - 11bit OSD buffer address, B - variable number of bytes
 // 8'b0_001_1100 | A_A_A_A B,B,... || write system memory, A - 32 bit memory address, B - variable number of bytes
 // 8'b1_000_1000 read RTL version
+
 
 // write regs
 always @ (posedge clk) begin
@@ -388,9 +401,11 @@ always @ (posedge clk) begin
   end
 end
 
+
 //// resets - temporary TODO!
 //assign usrrst  = rx && !cmd && spi_reset_ctrl_sel && (dat_cnt == 0);
 //assign bootrst = rx && !cmd && spi_reset_ctrl_sel && wrdat[0] && (dat_cnt == 0);
+
 
 // OSD buffer write
 reg wr_en_r = 1'b0;
@@ -405,6 +420,7 @@ end
 
 assign wren = wr_en_r && rx && !cmd;
 
+
 // address counter and buffer write control (write line <NNN> command)
 always @ (posedge clk) begin
   if (clk7_en) begin
@@ -415,7 +431,8 @@ always @ (posedge clk) begin
   end
 end
 
-// highlight
+
+// highlight - TODO remove!
 always @ (posedge clk) begin
   if (clk7_en) begin
     if (~osd_enable)
@@ -506,31 +523,46 @@ always @ (posedge clk) begin
   end
 end
 
-
-reg  [16-1:0] mem_page;
-reg  [16-1:0] mem_cnt;
+reg  [ 8-1:0] mem_page;
+reg  [24-1:0] mem_cnt;
 wire [32-1:0] mem_adr;
 always @ (posedge clk) begin
   if (clk7_en) begin
     if (rx && !cmd && spi_mem_write_sel) begin
       case (dat_cnt)
-        0 : mem_cnt [ 7:0] <= #1 wrdat[7:0];
-        1 : mem_cnt [15:8] <= #1 wrdat[7:0];
-        2 : mem_page[ 7:0] <= #1 wrdat[7:0];
-        3 : mem_page[15:8] <= #1 wrdat[7:0];
+        0 : mem_cnt [ 7: 0] <= #1 wrdat[7:0];
+        1 : mem_cnt [15: 8] <= #1 wrdat[7:0];
+        2 : mem_cnt [23:16] <= #1 wrdat[7:0];
+        3 : mem_page[ 7: 0] <= #1 wrdat[7:0];
       endcase
-    end else if (wr_fifo_rd_en) mem_cnt [15:0] <= #1 mem_cnt + 16'd2;
+    end else if (wr_fifo_rd_en) mem_cnt [23:0] <= #1 mem_cnt + 24'd2;
   end
 end
 
 assign mem_adr = {mem_page, mem_cnt};
 assign host_adr  = mem_adr[23:0];
 
-// register read
-wire [7:0] rtl_version;
-assign rtl_version = 8'h32;
 
-assign rddat =  (spi_version_sel)  ? rtl_version :
+// rtl version
+wire [8-1:0] rtl_version [0:4-1];
+assign rtl_version[0] = 8'd0; // BETA / RELEASE flag
+assign rtl_version[1] = 8'd1; // major release
+assign rtl_version[2] = 8'd0; // minor release
+assign rtl_version[3] = 8'd0; // zero flag (like end of string)
+
+reg  [8-1:0] rtl_ver;
+always @ (*) begin
+  case (dat_cnt[2:0])
+    2'b00   : rtl_ver = rtl_version[0];
+    2'b01   : rtl_ver = rtl_version[1];
+    2'b10   : rtl_ver = rtl_version[2];
+    default : rtl_ver = rtl_version[3];
+  endcase
+end
+
+
+// read data
+assign rddat =  (spi_version_sel)  ? rtl_ver :
                 (spi_mem_read_sel) ? 8'd00  : osd_ctrl;
 
 

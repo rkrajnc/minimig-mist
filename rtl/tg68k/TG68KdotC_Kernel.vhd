@@ -78,7 +78,7 @@ entity TG68KdotC_Kernel is
 		IPL_autovector          : in std_logic:='0';
 		CPU                     : in std_logic_vector(1 downto 0):="00";  -- 00->68000  01->68010  11->68020(only some parts - yet)
 		addr                    : buffer std_logic_vector(31 downto 0);
-		data_write              : out std_logic_vector(15 downto 0);
+		data_write              : buffer std_logic_vector(15 downto 0);
 		nWr                     : out std_logic;
 		nUDS                    : out std_logic;
 		nLDS                    : out std_logic;
@@ -88,7 +88,7 @@ entity TG68KdotC_Kernel is
 -- for debug
 		skipFetch               : out std_logic;
 		regin                   : buffer std_logic_vector(31 downto 0);
-    VBR_out                 : out std_logic_vector(31 downto 0)
+    VBR_out                 : buffer std_logic_vector(31 downto 0)
 		);
 end TG68KdotC_Kernel;
 
@@ -572,6 +572,8 @@ PROCESS (reg_QA, store_in_tmp, ea_data, long_start, addr, exec, memmaskmux)
 			OP1out <= (OTHERS => '0');
 		ELSIF exec(ea_data_OP1)='1' AND store_in_tmp='1' THEN
 			OP1out <= ea_data;
+   ELSIF exec(opcPACK)='1' THEN
+     OP1out <= data_write_tmp; 
 		ELSIF exec(movem_action)='1' OR memmaskmux(3)='0' OR exec(OP1addr)='1' THEN
 			OP1out <= addr;
 		END IF;
@@ -591,7 +593,7 @@ PROCESS (OP2out, reg_QB, exe_opcode, exe_datatype, execOPC, exec, use_direct_dat
 			IF exe_opcode(6)='0' OR exe_opcode(8)='1' THEN      --ext.w
 				OP2out(15 downto 8) <= (OTHERS => OP2out(7));
 			END IF;
-		ELSIF use_direct_data='1' OR (exec(exg)='1' AND execOPC='1') OR exec(get_bfoffset)='1' THEN
+ 		ELSIF (use_direct_data='1' AND exec(opcPACK)='0') OR (exec(exg)='1' AND execOPC='1') OR exec(get_bfoffset)='1' THEN	
 			OP2out <= data_write_tmp;
 		ELSIF (exec(ea_data_OP1)='0' AND store_in_tmp='1') OR exec(ea_data_OP2)='1' THEN
 			OP2out <= ea_data;
@@ -635,7 +637,11 @@ PROCESS (clk)
 
 				IF set_direct_data='1' THEN
 					direct_data <= '1';
-					use_direct_data <= '1';
+          IF set_exec(opcPACK)='1' THEN
+            use_direct_data <= '0';
+          ELSE
+					  use_direct_data <= '1';
+          END IF;
 				ELSIF endOPC='1' THEN
 					use_direct_data <= '0';
 				END IF;
@@ -679,7 +685,7 @@ PROCESS (clk)
 					data_write_tmp <= OP1out;
 				ELSIF exec(get_ea_now)='1' AND ea_only='1' THEN         -- ist for pea
 					data_write_tmp <= addr;
-				ELSIF execOPC='1' THEN
+				ELSIF execOPC='1' or micro_state=pack2 THEN
 					data_write_tmp <= ALUout;
 				ELSIF (exec_DIRECT='1' AND state="10") THEN
 					data_write_tmp <= data_read;
@@ -2263,7 +2269,52 @@ PROCESS (clk, cpu, OP1out, OP2out, opcode, exe_condition, nextpass, micro_state,
 						build_bcd <= '1';
 						set_exec(opcADD) <= '1';
 						set_exec(opcSBCD) <= '1';
-					ELSE                                                                        --pack, unpack
+         ELSIF cpu(1)='1' AND (opcode(7 downto 6)="01" OR opcode(7 downto 6)="10") THEN  --pack, unpack
+           datatype <= "01";   --Word
+           set_exec(opcPACK) <= '1';
+           set(no_Flags) <= '1';  -- this command modifies no flags
+
+           -- immediate value is kept in op1
+           -- source value is in op2
+           
+           -- xyz
+           if opcode(3)='0' then -- R/M bit = 0 -> Dy->Dy, 1 -(Ax),-(Ay)
+             dest_hbits <='1';      -- dest register is encoded in bits 9-11
+             source_lowbits <= '1'; -- source register is encoded in bits 0-2
+
+             set_exec(Regwrena) <= '1';    -- write result into register
+             set_exec(ea_data_OP1) <= '1'; -- immediate value goes into op2
+             set(hold_dwr) <= '1';
+
+             -- pack writes a byte only
+             IF opcode(7 downto 6) = "01" THEN
+               datatype <= "00";    --Byte
+             ELSE
+               datatype <= "01";    --Word
+             END IF;
+  
+             IF decodeOPC='1' THEN
+               next_micro_state <= nop;
+               set_direct_data <= '1';
+             END IF;
+           else 
+             set_exec(ea_data_OP1) <= '1';
+             source_lowbits <= '1'; -- source register is encoded in bits 0-2
+             
+             IF decodeOPC='1' THEN
+               -- first step: read source value
+               IF opcode(7 downto 6) = "10" THEN -- UNPK reads a byte
+                 datatype <= "00"; -- Byte
+               END IF;
+                set_direct_data <= '1';
+                setstate <= "10";
+                set(update_ld) <= '1';
+                set(presub) <= '1';
+                next_micro_state <= pack1;
+                dest_areg <= '1'; --???
+              end IF;
+           end IF;
+         ELSE
 						trap_illegal <= '1';
 						trapmake <= '1';
 					END IF;
@@ -3056,6 +3107,34 @@ PROCESS (clk, cpu, OP1out, OP2out, opcode, exe_condition, nextpass, micro_state,
 
 				WHEN bf1 =>
 					setstate <="10";
+
+        when pack1 =>
+          -- result computation
+          IF opcode(7 downto 6) = "10" THEN -- UNPK reads a byte
+            datatype <= "00"; -- Byte
+          END IF;
+          set(ea_data_OP2) <= '1';
+          set(opcPACK) <= '1';
+          next_micro_state <= pack2;
+
+        when pack2 =>
+          -- write result
+          IF opcode(7 downto 6) = "01" THEN -- PACK writes a byte
+            datatype <= "00";
+          END IF;
+          set(presub) <= '1';
+          setstate <= "11";
+          dest_hbits <= '1'; 
+          dest_areg <= '1';
+          next_micro_state <= pack3;
+
+          when pack3 =>
+            -- this is just to keep datatype == 00
+            -- for byte writes
+            -- write result
+            IF opcode(7 downto 6) = "01" THEN -- PACK writes a byte
+              datatype <= "00";
+            END IF;
 
 				WHEN OTHERS => NULL;
 			END CASE;

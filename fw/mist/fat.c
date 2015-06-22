@@ -108,13 +108,19 @@ int8_t fat_medium_present() {
   if(lread == MMC_Read) 
     return MMC_CheckCard();
   
+#ifdef USB_STORAGE
   return(storage_devices > 0);
+#else
+  return(false);
+#endif
 }
 
+#ifdef USB_STORAGE
 void fat_switch_to_usb(void) {
   lread = usb_storage_read;
   lwrite = usb_storage_write; 
 }
+#endif
 
 // return fat sector index of a given cluster entry
 #define CLUSTER2SECTOR(c) ((c) >> (fat32?7:8))
@@ -329,6 +335,7 @@ unsigned char FileOpen(fileTYPE *file, const char *name) {
       if (pEntry->Name[0] != SLOT_EMPTY && pEntry->Name[0] != SLOT_DELETED) { // valid entry??
 	if (!(pEntry->Attributes & (ATTR_VOLUME | ATTR_DIRECTORY))) // not a volume nor directory
 	  {
+	    //	    iprintf("check %.11s %.11s\n", pEntry->Name, name);
                     if (strncmp((const char*)pEntry->Name, name, sizeof(file->name)) == 0)
                     {
                         strncpy(file->name, (const char*)pEntry->Name, sizeof(file->name));

@@ -22,11 +22,11 @@ module denise_sprites_shifter
   output  reg attach        // sprite is attached
 );
 
-// register names and adresses    
-parameter POS  = 2'b00;      
-parameter CTL  = 2'b01;      
-parameter DATA = 2'b10;      
-parameter DATB = 2'b11;      
+// register names and adresses
+parameter POS  = 2'b00;
+parameter CTL  = 2'b01;
+parameter DATA = 2'b10;
+parameter DATB = 2'b11;
 
 // local signals
 reg    [63:0] datla;    // data register A
@@ -67,7 +67,7 @@ always @(posedge clk)
 // generate load signal
 always @(posedge clk)
   if (clk7_en) begin
-    load <= armed && hpos[8:0]==hstart[8:0] ? 1'b1 : 1'b0;
+    load <= armed && (hpos[7:0] == hstart[7:0]) && (fmode[15] || (hpos[8] == hstart[8])) ? 1'b1 : 1'b0;
   end
 
 always @(posedge clk)

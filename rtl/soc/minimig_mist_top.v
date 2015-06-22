@@ -1,15 +1,22 @@
 /********************************************/
 /* minimig_mist_top.v                       */
-/* Altera DE1 FPGA Top File                 */
+/* MiST Board Top File                      */
 /*                                          */
-/* 2012, rok.krajnc@gmail.com               */
+/* 2012-2015, rok.krajnc@gmail.com          */
 /********************************************/
 
 
+// board type define
 `define MINIMIG_MIST
+
+// new cpu define
+//`define MINIMIG_MIST_NEWCPU
+
+// simulation define
 //`define SOC_SIM
 
 `include "minimig_defines.vh"
+
 
 module minimig_mist_top (
   // clock inputs
@@ -101,12 +108,15 @@ wire           tg68_cpuena;
 wire [  4-1:0] cpu_config;
 wire [  6-1:0] memcfg;
 wire           turbochipram;
+wire           turbokick;
+wire           cache_inhibit;
 wire [ 32-1:0] tg68_cad;
 wire [  6-1:0] tg68_cpustate;
 wire           tg68_cdma;
 wire           tg68_clds;
 wire           tg68_cuds;
 wire [ 32-1:0] tg68_VBR_out;
+wire           tg68_ovr;
 
 // minimig
 wire           led;
@@ -244,6 +254,47 @@ amiga_clk amiga_clk (
 
 
 //// TG68K main CPU ////
+`ifdef MINIMIG_MIST_NEWCPU
+TG68K_SplitClock tg68k (
+  .clk          (clk_114          ),
+  .clk28        (clk_28           ),
+  .reset        (tg68_rst         ),
+  .IPL          (tg68_IPL         ),
+  .dtack        (tg68_dtack       ),
+//  .vpa          (1'b1             ),
+//  .ein          (1'b1             ),
+  .addr         (tg68_adr         ),
+  .data_read    (tg68_dat_in      ),
+  .data_write   (tg68_dat_out     ),
+  .as           (tg68_as          ),
+  .uds          (tg68_uds         ),
+  .lds          (tg68_lds         ),
+  .rw           (tg68_rw          ),
+  .e            (                 ),
+  .vma          (                 ),
+  .wrd          (                 ),
+  .ena7RDreg    (tg68_ena7RD      ),
+  .ena7WRreg    (tg68_ena7WR      ),
+  .enaWRreg     (tg68_enaWR       ),
+  .fromram      (tg68_cout        ),
+  .toram      (tg68_cin        ),
+  .ramready     (tg68_cpuena      ),
+  .cache_valid(cache_valid),
+  .cacheable(tg68_cacheable),
+  .cpu          (cpu_config[1:0]  ),
+  .turbochipram (memcfg[5]&memcfg[4]&turbochipram/*1'b0*//*turbochipram*/     ),
+  .fastramcfg   ({memcfg[5]&memcfg[4],memcfg[5:4]}),
+  .ramaddr      (tg68_cad         ),
+  .cpustate     (tg68_cpustate    ),
+  .nResetOut    (                 ),
+  .skipFetch    (                 ),
+  .ramlds       (tg68_clds        ),
+  .ramuds       (tg68_cuds        ),
+  .VBR_out      (tg68_VBR_out     )
+);
+
+`else
+
 TG68K tg68k (
   .clk          (clk_114          ),
   .reset        (tg68_rst         ),
@@ -268,8 +319,11 @@ TG68K tg68k (
   .fromram      (tg68_cout        ),
   .ramready     (tg68_cpuena      ),
   .cpu          (cpu_config[1:0]  ),
-  .turbochipram (1'b1/*turbochipram*/     ),
-  .fastramcfg   ({memcfg[5],memcfg[5:4]}),
+  .turbochipram (turbochipram     ),
+  .turbokick    (turbokick        ),
+  .cache_inhibit(cache_inhibit    ),
+  .fastramcfg   ({&memcfg[5:4],memcfg[5:4]}),
+  .ovr          (tg68_ovr         ),
   .ramaddr      (tg68_cad         ),
   .cpustate     (tg68_cpustate    ),
   .nResetOut    (                 ),
@@ -279,6 +333,8 @@ TG68K tg68k (
   .ramuds       (tg68_cuds        ),
   .VBR_out      (tg68_VBR_out     )
 );
+
+`endif
 
 /*
 //// TG68 main CPU ////
@@ -353,8 +409,10 @@ sdram_ctrl sdram (
 );
 */
 
-sdram sdram (
+//sdram sdram (
+sdram_ctrl sdram (
   .cache_rst    (tg68_rst         ),
+  .cache_inhibit(cache_inhibit    ),
   .sdata        (SDRAM_DQ         ),
   .sdaddr       (SDRAM_A[12:0]    ),
   .dqm          (sdram_dqm        ),
@@ -435,6 +493,7 @@ minimig minimig (
   ._cpu_dtack   (tg68_dtack       ), // M68K data acknowledge
   ._cpu_reset   (tg68_rst         ), // M68K reset
   .cpu_vbr      (tg68_VBR_out     ), // M68K VBR
+  .ovr          (tg68_ovr         ), // NMI override address decoding
   //sram pins
   .ram_data     (ram_data         ), // SRAM data bus
   .ramdata_in   (ramdata_in       ), // SRAM data bus in
@@ -495,6 +554,7 @@ minimig minimig (
   .cpu_config   (cpu_config       ), // CPU config
   .memcfg       (memcfg           ), // memory config
   .turbochipram (turbochipram     ), // turbo chipRAM
+  .turbokick    (turbokick        ), // turbo kickstart
   .init_b       (                 ), // vertical sync for MCU (sync OSD update)
   .fifo_full    (                 ),
   // fifo / track display

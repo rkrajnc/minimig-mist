@@ -15,11 +15,18 @@
 #include "spi.h"
 #include "mist_cfg.h"
 
+// up to 16 key can be remapped
+#define MAX_REMAP  16
+unsigned char key_remap_table[MAX_REMAP][2];
 
 #define BREAK  0x8000
 
 extern fileTYPE file;
 extern char s[40];
+
+extern DIRENTRY DirEntry[MAXDIRENTRIES];
+extern unsigned char iSelectedEntry;
+extern unsigned char sort_table[MAXDIRENTRIES];
 
 // mouse and keyboard emulation state
 typedef enum { EMU_NONE, EMU_MOUSE, EMU_JOY0, EMU_JOY1 } emu_mode_t;
@@ -51,6 +58,10 @@ static unsigned long mouse_timer;
 // set by OSD code to suppress forwarding of those keys to the core which
 // may be in use by an active OSD
 static char osd_is_visible = false;
+
+char user_io_osd_is_visible() {
+  return osd_is_visible;
+}
 
 static void PollOneAdc() {
   static unsigned char adc_cnt = 0xff;
@@ -111,6 +122,10 @@ static void PollAdc() {
 }
 
 void user_io_init() {
+
+  // mark remap table as unused
+  memset(key_remap_table, 0, sizeof(key_remap_table));
+
   InitADC();
 
   ikbd_init();
@@ -213,11 +228,16 @@ void user_io_detect_core_type() {
 	  user_io_8bit_set_status(sector_buffer[0], 0xff);
 	}
       }
-    }
 
+      // check if there's a <core>.rom present
+      strcpy(s+8, "ROM");
+      if (FileOpen(&file, s))
+	user_io_file_tx(&file, 0);
+    }
+    
     // release reset
     user_io_8bit_set_status(0, UIO_STATUS_RESET);
-
+    
   } break;
   }
 }
@@ -289,7 +309,27 @@ void user_io_serial_tx(char *chr, uint16_t cnt) {
   while(cnt--) spi8(*chr++);
   DisableIO();
 }
-  
+
+char user_io_serial_status(serial_status_t *status_in, uint8_t status_out) {
+  uint8_t i, *p = (uint8_t*)status_in;
+
+  spi_uio_cmd_cont(UIO_SERIAL_STAT);
+
+  // first byte returned by core must be "magic". otherwise the
+  // core doesn't support this request
+  if(SPI(status_out) != 0xa5) {
+    DisableIO();
+    return 0;
+  }
+
+  // read the whole structure
+  for(i=0;i<sizeof(serial_status_t);i++)
+    *p++ = spi_in();
+
+  DisableIO();
+  return 1;
+}
+
 // transmit midi data into core
 void user_io_midi_tx(char chr) {
   spi_uio_cmd8(UIO_MIDI_OUT, chr);
@@ -435,12 +475,26 @@ static void kbd_fifo_poll() {
   kbd_fifo_r = (kbd_fifo_r + 1)&(KBD_FIFO_SIZE-1);
 }
 
-void user_io_file_tx(fileTYPE *file) {
+void user_io_file_tx(fileTYPE *file, unsigned char index) {
   unsigned long bytes2send = file->size;
 
   /* transmit the entire file using one transfer */
 
-  iprintf("Selected file %.11s with %lu bytes to send\n", file->name, bytes2send);
+  iprintf("Selected file %.11s with %lu bytes to send for index %d\n", file->name, bytes2send, index);
+
+  // set index byte (0=bios rom, 1-n=OSD entry index)
+  EnableFpga();
+  SPI(UIO_FILE_INDEX);
+  SPI(index);
+  DisableFpga();
+
+  // send directory entry (for alpha amstrad core)
+  EnableFpga();
+  SPI(UIO_FILE_INFO);
+  spi_write((void*)(DirEntry+sort_table[iSelectedEntry]), sizeof(DIRENTRY));
+  DisableFpga();
+
+  //  hexdump(DirEntry+sort_table[iSelectedEntry], sizeof(DIRENTRY), 0);
 
   // prepare transmission of new file
   EnableFpga();
@@ -546,7 +600,7 @@ unsigned char user_io_8bit_set_status(unsigned char new_status, unsigned char ma
 
 void user_io_poll() {
 
-  if(user_io_dip_switch1() && (core_type != CORE_TYPE_ARCHIE)) {
+  if(user_io_dip_switch1()) {
     // check of core has changed from a good one to a not supported on
     // as this likely means that the user is reloading the core via jtag
     unsigned char ct;
@@ -599,17 +653,26 @@ void user_io_poll() {
     // check for incoming serial data. this is directly forwarded to the
     // arm rs232 and mixes with debug output. Useful for debugging only of
     // e.g. the diagnostic cartridge    
-    spi_uio_cmd_cont(UIO_SERIAL_IN);
-    while(spi_in()) {
-      c = spi_in();
-      if(c != 0xff) 
-	putchar(c);
-      
-      // forward to USB if redirection via USB/CDC enabled
-      if(redirect == CDC_REDIRECT_RS232)
-	cdc_control_tx(c);
+    if(!pl2303_is_blocked()) {
+      spi_uio_cmd_cont(UIO_SERIAL_IN);
+      while(spi_in() && !pl2303_is_blocked()) {
+	c = spi_in();
+	
+	// if a serial/usb adapter is connected it has precesence over
+	// any other sink
+	if(pl2303_present()) 
+	  pl2303_tx_byte(c);
+	else {
+	  if(c != 0xff) 
+	    putchar(c);
+	  
+	  // forward to USB if redirection via USB/CDC enabled
+	  if(redirect == CDC_REDIRECT_RS232)
+	    cdc_control_tx(c);
+	}
+      }
+      DisableIO();
     }
-    DisableIO();
     
     // check for incoming parallel/midi data
     if((redirect == CDC_REDIRECT_PARALLEL) || (redirect == CDC_REDIRECT_MIDI)) {
@@ -1233,7 +1296,17 @@ void user_io_kbd(unsigned char m, unsigned char *k) {
 //    hexdump(k, 6, 0);
 
     static unsigned char modifier = 0, pressed[6] = { 0,0,0,0,0,0 };
-    int i, j;
+    char i, j;
+    
+    // remap keycodes if requested
+    for(i=0;(i<6) && k[i];i++) {
+      for(j=0;j<MAX_REMAP;j++) {
+	if(key_remap_table[j][0] == k[i]) {
+	  k[i] = key_remap_table[j][1];
+	  break;
+	}
+      }
+    }
     
     // modifier keys are used as buttons in emu mode
     if(emu_mode != EMU_NONE) {
@@ -1317,7 +1390,7 @@ void user_io_kbd(unsigned char m, unsigned char *k) {
 	  }
 
 	  if(!key_used_by_osd(code)) {
-	    iprintf("Key is not used by OSD\n");
+	    //	    iprintf("Key is not used by OSD\n");
 
 	    if(is_emu_key(pressed[i])) {
 	      emu_state &= ~is_emu_key(pressed[i]);
@@ -1360,7 +1433,7 @@ void user_io_kbd(unsigned char m, unsigned char *k) {
 	  // no further processing of any key that is currently 
 	  // redirected to the OSD
 	  if(!key_used_by_osd(code)) {
-	    iprintf("Key is not used by OSD\n");
+	    //	    iprintf("Key is not used by OSD\n");
 
 	    if (is_emu_key(k[i])) {
 	      emu_state |= is_emu_key(k[i]);
@@ -1416,3 +1489,22 @@ void user_io_kbd(unsigned char m, unsigned char *k) {
   }
 }
 
+void user_io_key_remap(char *s) {
+  // s is a string containing two comma serperated hex numbers
+  if((strlen(s) != 5) && (s[2]!=',')) {
+    ini_parser_debugf("malformed entry %s", s);
+    return;
+  }
+
+  char i;
+  for(i=0;i<MAX_REMAP;i++) {
+    if(!key_remap_table[i][0]) {
+      key_remap_table[i][0] = strtol(s, NULL, 16);
+      key_remap_table[i][1] = strtol(s+3, NULL, 16);
+      
+      ini_parser_debugf("key remap entry %d = %02x,%02x", 
+			i, key_remap_table[i][0], key_remap_table[i][1]);
+      return;
+    }
+  }
+}

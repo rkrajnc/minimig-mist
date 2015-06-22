@@ -52,7 +52,7 @@
 // ------------ usb debugging -----------
 
 #if 0
-#define hidp_debugf(...) iprintf(__VA_ARGS__)
+#define hidp_debugf(a, ...)  iprintf("\033[1;34mHIDP: " a "\033[0m\n", ##__VA_ARGS__)
 #else
 #define hidp_debugf(...)
 #endif
@@ -78,7 +78,7 @@
 #define storage_debugf(...)
 #endif
 
-#if 1
+#if 0
 // usb rts debug output in blue
 #define usbrtc_debugf(a, ...) iprintf("\033[1;34mUSBRTC: " a "\033[0m\n", ##__VA_ARGS__)
 #else
@@ -86,8 +86,15 @@
 #endif
 
 #if 1
+// usb rts debug output in blue
+#define pl2303_debugf(a, ...) iprintf("\033[1;34mPL2303: " a "\033[0m\n", ##__VA_ARGS__)
+#else
+#define pl2303_debugf(...)
+#endif
+
+#if 1
 // ini_parser debug output
-#define ini_parser_debugf(a, ...) iprintf("INI_PARSER : " a "\n",## __VA_ARGS__)
+#define ini_parser_debugf(a, ...) iprintf("\033[1;34mINI_PARSER : " a "\033[0m\n",## __VA_ARGS__)
 #else
 #define ini_parser_debugf(...)
 #endif

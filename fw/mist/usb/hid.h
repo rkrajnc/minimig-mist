@@ -43,6 +43,15 @@
 #define HID_DEVICE_KEYBOARD 2
 #define HID_DEVICE_JOYSTICK 3
 
+// when the joystick axis counts as trigger a direction for binary
+#define JOYSTICK_AXIS_MIN           0
+#define JOYSTICK_AXIS_MID           127
+#define JOYSTICK_AXIS_MAX           255
+#define JOYSTICK_AXIS_TRIGGER_MIN   64
+#define JOYSTICK_AXIS_TRIGGER_MAX   192
+
+
+
 typedef struct {
   ep_t ep;    // interrupt endpoint info structure
 
@@ -50,15 +59,16 @@ typedef struct {
   uint16_t report_desc_size;
 
   uint8_t device_type;
+  bool ignore_boot_mode: 1;  // don't use boot mode even if device supports it
   bool has_boot_mode: 1;     // device supports boot mode
   bool is_5200daptor: 1;     // device is a 5200daptor with special key handling
   uint16_t key_state;        // needed to detect key state changes in 5200daptor
   
   // additional info extracted from the report descriptor
   // (currently only used for joysticks) 
-  uint8_t jmap;           // last reported joystick state
-  uint8_t jindex;         // joystick index
-  hid_config_t conf;
+  uint16_t jmap;           // last reported joystick state
+  uint16_t jindex;         // joystick index
+  hid_report_t conf;
 
   uint8_t interval;
   uint32_t qNextPollTime;     // next poll time
@@ -88,5 +98,12 @@ extern const usb_device_class_config_t usb_hid_class;
 
 void hid_set_kbd_led(unsigned char led, bool on);
 uint8_t hid_get_joysticks(void);
+int8_t hid_keyboard_present(void);
+
+void hid_joystick_button_remap_init(void);
+void hid_joystick_button_remap(char *);
+
+void virtual_joystick_remap_init(void);
+void virtual_joystick_remap(char *);
 
 #endif // HID_H

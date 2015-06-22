@@ -1,53 +1,57 @@
-// Copyright 2006, 2007 Dennis van Weeren
-//
-// This file is part of Minimig
-//
-// Minimig is free software; you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 3 of the License, or
-// (at your option) any later version.
-//
-// Minimig is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <http://www.gnu.org/licenses/>.
-//
-//
-//
-// This is Denise
-// This module  is a complete implementation of the Amiga OCS Denise chip
-// It supports all OCS modes including HAM, EHB and interlaced video
-//
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+// Copyright 2006, 2007 Dennis van Weeren                                     //
+// Copyright 2008, Jakub Bednarski                                            //
+// Copyright 2011-2015, Rok Krajnc                                            //
+//                                                                            //
+// This file is part of Minimig                                               //
+//                                                                            //
+// Minimig is free software; you can redistribute it and/or modify            //
+// it under the terms of the GNU General Public License as published by       //
+// the Free Software Foundation; either version 3 of the License, or          //
+// (at your option) any later version.                                        //
+//                                                                            //
+// Minimig is distributed in the hope that it will be useful,                 //
+// but WITHOUT ANY WARRANTY; without even the implied warranty of             //
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              //
+// GNU General Public License for more details.                               //
+//                                                                            //
+// You should have received a copy of the GNU General Public License          //
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.      //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+// This is Denise                                                             //
+// This module  is a complete implementation of the Amiga OCS Denise chip     //
+// It supports all OCS modes including HAM, EHB and interlaced video          //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
 
 
-module denise
-(
-  input   clk,          // 35ns pixel clock
-  input   clk7_en,
-  input   c1 ,          // 35ns clock enable signals (for synchronization with clk)
-  input   c3,
-  input   cck,          // colour clock enable
-  input   reset,          // reset
-  input  strhor,          // horizontal strobe
-  input   [8:1] reg_address_in,  // register adress inputs
-  input   [15:0] data_in,      // bus data in
-  input   [48-1:0] chip48,    // big chipram read
-  output   [15:0] data_out,    // bus data out
-  input  blank,          // blanking input
-  output   [7:0] red,         // red componenent video out
-  output   [7:0] green,        // green component video out
-  output   [7:0] blue,        // blue component video out
-  input a1k,          // control EHB chipset feature
-  input  ecs,          // enables ECS chipset features
-  input aga,          // enables AGA features
-  output  hires        // hires
+module denise (
+  input  wire           clk,            // 28MHz clock
+  input  wire           clk7_en,        // 7MHz clock enable
+  input  wire           c1 ,            // 35ns clock enable signals (for synchronization with clk)
+  input  wire           c3,
+  input  wire           cck,            // colour clock enable
+  input  wire           reset,          // reset
+  input  wire           strhor,         // horizontal strobe
+  input  wire [  9-1:1] reg_address_in, // register adress inputs
+  input  wire [ 16-1:0] data_in,        // bus data in
+  input  wire [ 48-1:0] chip48,         // big chipram read
+  output wire [ 16-1:0] data_out,       // bus data out
+  input  wire           blank,          // blanking input
+  output wire [  8-1:0] red,            // red componenent video out
+  output wire [  8-1:0] green,          // green component video out
+  output wire [  8-1:0] blue,           // blue component video out
+  input  wire           a1k,            // control EHB chipset feature
+  input  wire           ecs,            // enables ECS chipset features
+  input  wire           aga,            // enables AGA features
+  output wire           hires           // hires
 );
 
 
-//register names and adresses
+// register names and adresses
 parameter DIWSTRT  = 9'h08e;
 parameter DIWSTOP  = 9'h090;
 parameter DIWHIGH  = 9'h1e4;
@@ -58,7 +62,8 @@ parameter BPLCON4  = 9'h10c;
 parameter DENISEID = 9'h07c;
 parameter BPL1DAT  = 9'h110;
 
-//local signals
+
+// local signals
 reg    [8:0] hpos;        // horizontal beamcounter
 reg    [3:0] l_bpu;      // latched bitplane enable
 
@@ -103,7 +108,7 @@ always @(posedge clk)
 // sprite display enable signal - sprites are visible after the first write to the BPL1DAT register in a scanline
 always @(posedge clk)
   if (clk7_en) begin
-    if (reset || hpos[8:0]==8)
+    if (reset || blank)
       display_ena <= 0;
     else if (reg_address_in[8:1]==BPL1DAT[8:1])
       display_ena <= 1;
@@ -204,9 +209,9 @@ assign extblken = bplcon3[0] & ecsena;
 
 // BPLCON4 register
 reg  [16-1:0] bplcon4;    // bplcon3 register
-wire [ 8-1:0] bplxor;     // color select xor value
-wire [ 4-1:0] esprm;      // even sprites 4 MSB color table address
-wire [ 4-1:0] osprm;      // odd sprites 4 MSB color table address
+reg  [ 8-1:0] bplxor;     // color select xor value
+reg  [ 4-1:0] esprm;      // even sprites 4 MSB color table address
+reg  [ 4-1:0] osprm;      // odd sprites 4 MSB color table address
 
 always @(posedge clk) begin
   if (clk7_en) begin
@@ -217,9 +222,21 @@ always @(posedge clk) begin
   end
 end
 
-assign bplxor   = bplcon4[15:8];
-assign esprm    = bplcon4[7:4];
-assign osprm    = bplcon4[3:0];
+// BPLCON4 values are supposedly delayed for 1 lores pixel TODO check this!
+always @ (posedge clk) begin
+  if (clk7_en) begin
+    if (reset) begin
+      bplxor   <= 8'd0;
+      esprm    <= 4'd1;
+      osprm    <= 4'd1;
+    end else begin
+      bplxor   <= bplcon4[15:8];
+      esprm    <= bplcon4[7:4];
+      osprm    <= bplcon4[3:0];
+    end
+  end
+end
+
 
 // DIWSTART and DIWSTOP registers (vertical and horizontal limits of display window)
 
@@ -305,6 +322,7 @@ assign bpldata[8] = l_bpu > 7 ? bpldata_out[8] : 1'b0;
 // instantiate playfield module
 denise_playfields plfm0
 (
+  .aga (aga),
   .bpldata(bpldata),
   .dblpf(dpf),
   .pf2of(pf2of),
@@ -351,7 +369,7 @@ denise_spritepriority spm0
 wire  [24-1:0] clut_rgb;    // colour table rgb data out
 wire           ehb_en;      // ehb enable
 
-assign ehb_en = !killehb && !a1k && !ham && !dpf && ((l_bpu == 4'd6) || (ecs && (l_bpu == 4'd7)));
+assign ehb_en = !killehb && !a1k && !ham && !dpf && (l_bpu == 4'd6);
 
 denise_colortable clut0
 (
@@ -369,7 +387,7 @@ denise_colortable clut0
 
 // instantiate HAM (hold and modify) module
 wire ham8 = ham && (l_bpu == 4'd8);
-wire ham_sel = ham && ((l_bpu == 4'd6) || (l_bpu == 4'd7) || (l_bpu == 4'd8));
+wire ham_sel = ham && ((l_bpu == 4'd6) || (l_bpu == 4'd8));
 
 denise_hamgenerator ham0
 (
