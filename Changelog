@@ -8,8 +8,25 @@ SB - Sascha Boing
 AR - A.M. Robinson
 TH - Till Harbaum
 RK - Rok Krajnc
+MJ - Mike Johnson
 
 
+2016-02-20 - RK - MINIMIG      - initial implementation of programmable display modes
+2016-02-16 - RK - MINIMIG      - OSD HRTmon enable / disable switch is working (ON - F11 acts as NMI and enters HRTmon, OFF - F11 is HELP key)
+2016-02-15 - RK - MINIMIG      - proper handling of CPU access to chipRAM & custom regs - CPU waits for free slot when turbo option is disabled
+2016-02-15 - RK - DENISE       - fixed playfield 2 color lut offset when playfield 2 has priority for OCS/ECS modes
+2016-02-15 - MJ - BLITTER      - some IRQ changes (unknown cause / effect)
+2016-02-14 - RK - AGNUS        - added support for undocumented Agnus behaviour when BPL=7 in ECS/OCS mode (fixes demos like SushiBoyz by Ghostown, Sliced&Diced by Dekadence, etc)
+2016-02-14 - RK - DENISE       - added support for undocumented Denise behaviour when BPL=7 in ECS/OCS mode (fixes demos like SushiBoyz by Ghostown, Sliced&Diced by Dekadence, etc)
+2016-02-09 - RK - BLITTER      - blitter line mode fixed (fixes demos like SushiBoyz & Sunglasses by Ghostown, Vectorize by RSi, etc)
+2016-01-30 - TH - TG68         - bitfield instructions fixed, barrel shifter implemented
+2016-01-30 - RK - DENISE       - fixed colortable for sprites (bplxor) - fixes Alien Breed 3D (and probably many others)
+2016-01-09 - RK - MIST         - fixed keyboard rate
+2016-01-09 - RK - MIST         - kickstart ROM is also uploaded to mirror position (E0)
+2015-10-24 - RK - MINIMIG      - fixed reset problems & fastRAM disappearing
+2015-09-21 - RK - TG68         - added CACR cache control, fixed reading CACR reg
+2015-09-14 - RK - AMBER        - added scanlines for non-doublescaned config
+2015-09-14 - RK - AMBER        - fixed dithering - both spatial & random dithering weren't working properly
 2015-09-10 - RK - USERIO       - disabled entering the OSD menu with DB9-connected joystick with UP+DOWN combination
 2015-09-10 - RK - FIRMWARE     - fixed loading of Cloanto AmigaForever encrypted ROMs
 2015-09-10 - RK - TG68         - reduced the speed of the CPU core

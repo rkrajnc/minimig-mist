@@ -93,7 +93,7 @@ module ciaa
   input   eclk,          // eclk (counter input for timer A/B)
   output   irq,           // interrupt request out
   input  [7:2] porta_in,   // porta in
-  output   [1:0] porta_out,  // porta out
+  output   [3:0] porta_out,  // porta out
   output  kbdrst,        // keyboard reset out
   inout  kbddat,        // ps2 keyboard data
   inout  kbdclk,        // ps2 keyboard clock
@@ -110,7 +110,8 @@ module ciaa
   output  freeze,        // Action Replay freeze key
   input  disk_led,      // floppy disk activity LED
   output [5:0] mou_emu,
-  output [5:0] joy_emu
+  output [5:0] joy_emu,
+  input hrtmon_en
 );
 
 // local signals
@@ -175,6 +176,8 @@ reg    [7:0] sdr_latch;
 
 `ifdef MINIMIG_PS2_KEYBOARD
 
+wire freeze_out;
+
 ciaa_ps2keyboard  kbd1
 (
   .clk(clk),
@@ -193,10 +196,12 @@ ciaa_ps2keyboard  kbd1
   ._lmb(_lmb),
   ._rmb(_rmb),
   ._joy2(_joy2),
-  .freeze(freeze),
+  .freeze(freeze_out),
   .mou_emu(mou_emu),
   .joy_emu(joy_emu)
 );
+
+assign freeze = hrtmon_en && freeze_out;
 
 // sdr register
 // !!! Amiga receives keycode ONE STEP ROTATED TO THE RIGHT AND INVERTED !!!
@@ -257,7 +262,7 @@ always @ (posedge clk) begin
       freeze_reg <= #1 1'b0;
     end else if (kms && (kmt == 2) && ~keyboard_disabled) begin
       sdr_latch[7:0] <= ~{kmd[6:0],kmd[7]};
-      if (kmd == 8'h5f) freeze_reg <= #1 1'b1;
+      if (hrtmon_en && (kmd == 8'h5f)) freeze_reg <= #1 1'b1;
       else freeze_reg <= #1 1'b0;
     end else if (wr & sdr) begin
         sdr_latch[7:0] <= data_in[7:0];
@@ -328,7 +333,7 @@ always @(posedge clk) begin
      end else begin
       if (keystrobe && (kbd_mouse_type == 2) && ~keyboard_disabled) begin
         sdr_latch[7:0] <= ~{kbd_mouse_data[6:0],kbd_mouse_data[7]};
-        if (kbd_mouse_data == 8'h5f) freeze_reg <= #1 1'b1;
+        if (hrtmon_en && (kbd_mouse_data == 8'h5f)) freeze_reg <= #1 1'b1;
         else freeze_reg <= #1 1'b0;
       end else if (wr & sdr)
         sdr_latch[7:0] <= data_in[7:0];
@@ -375,7 +380,7 @@ assign ser_tx_irq = &ser_tx_cnt & tmra_ovf; // signal irq when ser_tx_cnt overfl
 // porta
 //----------------------------------------------------------------------------------
 reg [7:2] porta_in2;
-reg [1:0] regporta;
+reg [3:0] regporta;
 reg [7:0] ddrporta;
 
 // synchronizing of input data
@@ -388,9 +393,9 @@ always @(posedge clk)
 always @(posedge clk)
   if (clk7_en) begin
     if (reset)
-      regporta[1:0] <= 2'd0;
+      regporta[3:0] <= 4'd0;
     else if (wr && pra)
-      regporta[1:0] <= data_in[1:0];
+      regporta[3:0] <= {data_in[7:6], data_in[1:0]};
   end
 
 // writing of ddr register
@@ -414,7 +419,7 @@ begin
 end
 
 // assignment of output port while keeping in mind that the original 8520 uses pull-ups
-assign porta_out[1:0] = (~ddrporta[1:0]) | regporta[1:0];
+assign porta_out[3:0] = {(~ddrporta[7:6] | regporta[3:2]), (~ddrporta[1:0] | regporta[1:0])};
 
 //----------------------------------------------------------------------------------
 // portb

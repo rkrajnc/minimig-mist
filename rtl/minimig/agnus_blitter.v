@@ -182,6 +182,7 @@ wire	sign_out;				// new accumulator sign calculated by address generator (line 
 reg		sign;					// current sign of accumulator (line mode)
 reg		sign_del;
 reg		first_pixel;			// first pixel in a horizontal segment (used in one-dot line mode)
+reg   first_line_pixel; // first pixel of line (use D pointer)
 
 reg		start;					// busy delayed by one blitter cycle (for cycle exact compatibility)
 wire	init;					// blitter initialization cycle
@@ -310,10 +311,10 @@ always @(posedge clk)
 always @(*)
 	if (first_word && last_word)
 		bltamask[15:0] = bltafwm[15:0] & bltalwm[15:0];
-	else if (last_word)
-		bltamask[15:0] = bltalwm[15:0];
 	else if (first_word)
 		bltamask[15:0] = bltafwm[15:0];	
+	else if (last_word)
+		bltamask[15:0] = bltalwm[15:0];
 	else
 		bltamask[15:0] = 16'hFF_FF;
 		
@@ -479,7 +480,9 @@ always @(posedge clk)
 // channel D 'zero' flag
 always @(posedge clk)
   if (clk7_en) begin
-  	if (enable && init)
+    if (reset)
+      zero <= 1;
+  	else if (enable && init)
   		zero <= 1;
   	else if (store_result && |fill_out[15:0])
   		zero <= 0;
@@ -577,6 +580,7 @@ agnus_blitter_adrgen address_generator_1
 	.clk(clk),
   .clk7_en(clk7_en),
 	.reset(reset),
+  .first_line_pixel(line && first_line_pixel),
 	.ptrsel(ptrsel),
 	.modsel(modsel),
 	.enaptr(enaptr),
@@ -842,13 +846,12 @@ always @(*)
 		
 		BLT_L4: // store cycle - initial write @ D ptr, all succesive @ C ptr, always modulo C used
 		begin
-
 			chsel = CHD;
 			ptrsel = CHC;
 			modsel = CHC;
 			enaptr = enable;
-			incptr = ( bltcon1[4] && !bltcon1[2] || !bltcon1[4] && !bltcon1[3] && !sign_del) && ash==4'b1111 ? 1'b1 : 1'b0;
-			decptr = ( bltcon1[4] &&  bltcon1[2] || !bltcon1[4] &&  bltcon1[3] && !sign_del) && ash==4'b0000 ? 1'b1 : 1'b0;
+			incptr = (bltcon1[4] && !bltcon1[2] || !bltcon1[4] && !bltcon1[3] && !sign_del) && ash==4'b1111 ? 1'b1 : 1'b0;
+			decptr = (bltcon1[4] &&  bltcon1[2] || !bltcon1[4] &&  bltcon1[3] && !sign_del) && ash==4'b0000 ? 1'b1 : 1'b0;
 			addmod = !bltcon1[4] && !bltcon1[2] ||  bltcon1[4] && !bltcon1[3] && !sign_del ? 1'b1 : 1'b0;
 			submod = !bltcon1[4] &&  bltcon1[2] ||  bltcon1[4] &&  bltcon1[3] && !sign_del ? 1'b1 : 1'b0;
 			// in 'one dot' mode this might be a free bus cycle
@@ -897,7 +900,11 @@ always @(posedge clk)
 
 // blitter busy flag is cleared immediately after last source data is fetched (if D channel is not enabled) or the last but one result is stored
 // signal 'done' is used to clear the 'busy' and 'start' flags
-assign done = (blt_state==BLT_C && !used || blt_state==BLT_D) && last_word && last_line || blt_state==BLT_L4 && last_line ? enable : 1'b0;
+//assign done = (blt_state==BLT_C && !used || blt_state==BLT_D) && last_word && last_line || blt_state==BLT_L4 && last_line ? enable : 1'b0;
+
+// This is temporary solution. Needs further investigation. With heavy display load and 060 CPU an ISR could run before the last pipelined data write.
+assign done = (blt_state==BLT_C || blt_state==BLT_D) && !used && last_word && last_line || blt_state==BLT_F || blt_state==BLT_L4 && last_line ? enable : 1'b0;
+
 
 always @(posedge clk)
   if (clk7_en) begin
@@ -907,6 +914,19 @@ always @(posedge clk)
   		else if (blt_state==BLT_L4)
   			first_pixel <= ~sign_del;
   end
+
+always @ (posedge clk) begin
+  if (clk7_en) begin
+    if (reset) begin
+      first_line_pixel <= #1 1'b0;
+    end else if (enable) begin
+      if (blt_state == BLT_INIT)
+        first_line_pixel <= #1 1'b1;
+      else if (blt_state == BLT_L4)
+        first_line_pixel <= #1 1'b0;
+    end
+  end
+end
 
 always @(posedge clk)
   if (clk7_en) begin

@@ -112,9 +112,11 @@ wire           turbokick;
 wire           cache_inhibit;
 wire [ 32-1:0] tg68_cad;
 wire [  6-1:0] tg68_cpustate;
+wire           tg68_nrst_out;
 wire           tg68_cdma;
 wire           tg68_clds;
 wire           tg68_cuds;
+wire [  4-1:0] tg68_CACR_out;
 wire [ 32-1:0] tg68_VBR_out;
 wire           tg68_ovr;
 
@@ -155,14 +157,14 @@ wire [  2-1:0] sdram_ba;
 // mist
 wire           user_io_sdo;
 wire           minimig_sdo;
-wire [  6-1:0] JOYA;
-wire [  6-1:0] JOYB;
-reg  [  6-1:0] JOYA_0;
-reg  [  6-1:0] JOYB_0;
-reg  [  6-1:0] JOYA_1;
-reg  [  6-1:0] JOYB_1;
-wire [  6-1:0] joya;
-wire [  6-1:0] joyb;
+wire [  8-1:0] JOYA;
+wire [  8-1:0] JOYB;
+reg  [  8-1:0] JOYA_0;
+reg  [  8-1:0] JOYB_0;
+reg  [  8-1:0] JOYA_1;
+reg  [  8-1:0] JOYB_1;
+wire [  8-1:0] joya;
+wire [  8-1:0] joyb;
 wire [  8-1:0] kbd_mouse_data;
 wire           kbd_mouse_strobe;
 wire           kms_level;
@@ -287,7 +289,7 @@ TG68K_SplitClock tg68k (
   .fastramcfg   ({memcfg[5]&memcfg[4],memcfg[5:4]}),
   .ramaddr      (tg68_cad         ),
   .cpustate     (tg68_cpustate    ),
-  .nResetOut    (                 ),
+  .nResetOut    (tg68_nrst_out    ),
   .skipFetch    (                 ),
   .ramlds       (tg68_clds        ),
   .ramuds       (tg68_cuds        ),
@@ -324,14 +326,19 @@ TG68K tg68k (
   .turbokick    (turbokick        ),
   .cache_inhibit(cache_inhibit    ),
   .fastramcfg   ({&memcfg[5:4],memcfg[5:4]}),
+  .eth_en       (1'b1), // TODO
+  .sel_eth      (),
+  .frometh      (16'd0),
+  .ethready     (1'b0),
   .ovr          (tg68_ovr         ),
   .ramaddr      (tg68_cad         ),
   .cpustate     (tg68_cpustate    ),
-  .nResetOut    (                 ),
+  .nResetOut    (tg68_nrst_out    ),
   .skipFetch    (                 ),
   .cpuDMA       (tg68_cdma        ),
   .ramlds       (tg68_clds        ),
   .ramuds       (tg68_cuds        ),
+  .CACR_out     (tg68_CACR_out    ),
   .VBR_out      (tg68_VBR_out     )
 );
 
@@ -414,6 +421,7 @@ sdram_ctrl sdram (
 sdram_ctrl sdram (
   .cache_rst    (tg68_rst         ),
   .cache_inhibit(cache_inhibit    ),
+  .cpu_cache_ctrl (tg68_CACR_out    ),
   .sdata        (SDRAM_DQ         ),
   .sdaddr       (SDRAM_A[12:0]    ),
   .dqm          (sdram_dqm        ),
@@ -494,6 +502,7 @@ minimig minimig (
   .cpu_r_w      (tg68_rw          ), // M68K read / write
   ._cpu_dtack   (tg68_dtack       ), // M68K data acknowledge
   ._cpu_reset   (tg68_rst         ), // M68K reset
+  ._cpu_reset_in(tg68_nrst_out    ), // M68K reset out
   .cpu_vbr      (tg68_VBR_out     ), // M68K VBR
   .ovr          (tg68_ovr         ), // NMI override address decoding
   //sram pins
@@ -521,8 +530,8 @@ minimig minimig (
   .cts          (1'b0             ),  // RS232 clear to send
   .rts          (                 ),  // RS232 request to send
   //I/O
-  ._joy1        (~joya            ),  // joystick 1 [fire2,fire,up,down,left,right] (default mouse port)
-  ._joy2        (~joyb            ),  // joystick 2 [fire2,fire,up,down,left,right] (default joystick port)
+  ._joy1        (~joya            ),  // joystick 1 [fire4,fire3,fire2,fire,up,down,left,right] (default mouse port)
+  ._joy2        (~joyb            ),  // joystick 2 [fire4,fire3,fire2,fire,up,down,left,right] (default joystick port)
   .mouse_btn1   (1'b1             ), // mouse button 1
   .mouse_btn2   (1'b1             ), // mouse button 2
   .mouse_btn    (mouse_buttons    ),  // mouse buttons

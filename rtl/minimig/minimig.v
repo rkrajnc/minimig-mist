@@ -159,6 +159,7 @@ module minimig
 	input	cpu_r_w,			// m68k read / write
 	output	_cpu_dtack,			// m68k data acknowledge
 	output	_cpu_reset,			// m68k reset
+  input _cpu_reset_in,    // m68k reset in
   input [31:0] cpu_vbr, // m68k VBR
   output wire ovr,      // NMI address decoding override
 	//sram pins
@@ -186,8 +187,8 @@ module minimig
 	input	cts,				//rs232 clear to send
 	output	rts,				//rs232 request to send
 	//I/O
-	input	[5:0]_joy1,			//joystick 1 [fire2,fire,up,down,left,right] (default mouse port)
-	input	[5:0]_joy2,			//joystick 2 [fire2,fire,up,down,left,right] (default joystick port)
+	input	[7:0]_joy1,			//joystick 1 [fire2,fire,up,down,left,right] (default mouse port)
+	input	[7:0]_joy2,			//joystick 2 [fire2,fire,up,down,left,right] (default joystick port)
   input mouse_btn1, // mouse button 1
   input mouse_btn2, // mouse button 2
   input [2:0] mouse_btn, // mouse buttons
@@ -288,6 +289,7 @@ wire		[8:1] reg_address; 		//main register address bus
 wire		kbdrst;					//keyboard reset
 wire		reset;					//global reset
 wire    aflock;
+wire    cpu_custom;
 wire		dbr;					//data bus request, Agnus tells CPU that she is using the bus
 wire		dbwe;					//data bus write enable, Agnus tells the RAM it's writing data
 wire		dbs;					//data bus slow down, used for slowing down CPU access to chip, slow and custor register address space
@@ -312,6 +314,8 @@ wire    [5:0] kb_joy2;
 wire		freeze;					//Action Replay freeze button
 wire		_fire0;					//joystick 1 fire signal to cia A
 wire		_fire1;					//joystick 2 fire signal to cia A
+wire    _fire0_dat;
+wire    _fire1_dat;
 wire		[3:0] audio_dmal;		//audio dma data transfer request from Paula to Agnus
 wire		[3:0] audio_dmas;		//audio dma location pointer restart from Paula to Agnus
 wire		disk_dmal;				//disk dma data transfer request from Paula to Agnus
@@ -333,7 +337,9 @@ wire		osd_pixel;				//osd pixel(video) data
 wire		_hsync_i;				//horizontal sync (internal)
 wire		_vsync_i;				//vertical sync (internal)
 wire		_csync_i;				//composite sync (internal)
-wire		[8:1] htotal;			//video line length (140ns units)
+wire		[8:0] htotal;			//video line length (140ns units)
+wire    harddis;
+wire    varbeamen;
 
 //local floppy signals (CIA<-->Paula)
 wire		_step;					//step heads of disk
@@ -371,7 +377,7 @@ wire	hires;					//hires signal from Denise for interpolation filter enable in Am
 wire	aron;					//Action Replay is enabled
 wire	cpu_speed;				//requests CPU to switch speed mode
 wire	turbo;					//CPU is working in turbo mode
-wire	[5:0] memory_config;	//memory configuration
+wire	[6:0] memory_config;	//memory configuration
 wire	[3:0] floppy_config;	//floppy drives configuration (drive number and speed)
 wire	[4:0] chipset_config;	//chipset features selection
 wire	[2:0] ide_config;		//HDD & HDC config: bit #0 enables Gayle, bit #1 enables Master drive, bit #2 enables Slave drive
@@ -430,13 +436,13 @@ assign pwrled = (_led & (led_dim | ~turbo)) ? 1'b0 : 1'b1; // led dim at off-sta
 
 
 
-assign memcfg = memory_config;
+assign memcfg = memory_config[5:0];
 
-// turbo chipram only when no overlay is active, cpu_config[2] (fast chip) enabled and chipRAM=2MB
-assign turbochipram = !ovl && cpu_config[2] && (&memory_config[1:0]);
+// turbo chipram only when in AGA mode, no overlay is active, cpu_config[2] (fast chip) is enabled or Agnus allows CPU on the bus and chipRAM=2MB
+assign turbochipram = chipset_config[4] && !ovl && (cpu_config[2] || cpu_custom) && (&memory_config[1:0]);
 
-// turbo kickstart only when no overlay is active and cpu_config[3] (fast kick) enabled
-assign turbokick = !ovl && cpu_config[3];
+// turbo kickstart only when no overlay is active and cpu_config[3] (fast kick) enabled or AGA mode is enabled
+assign turbokick = !ovl && (cpu_config[3] || chipset_config[4]);
 
 // NTSC/PAL switching is controlled by OSD menu, change requires reset to take effect
 always @(posedge clk)
@@ -481,6 +487,7 @@ agnus AGNUS1
 	.address_in(cpu_address_out[8:1]),
 	.address_out(dma_address_out),
 	.reg_address_out(reg_address),
+  .cpu_custom(cpu_custom),
 	.dbr(dbr),
 	.dbwe(dbwe),
 	._hsync(_hsync_i),
@@ -493,6 +500,8 @@ agnus AGNUS1
 	.strhor_denise(strhor_denise),
 	.strhor_paula(strhor_paula),
 	.htotal(htotal),
+  .harddis(harddis),
+  .varbeamen(varbeamen),
 	.int3(int3),
 	.audio_dmal(audio_dmal),
 	.audio_dmas(audio_dmas),
@@ -583,6 +592,7 @@ userio USERIO1
 	.c3(c3),
 	.sol(sol),
 	.sof(sof),
+  .varbeamen(varbeamen),
 	.reg_address_in(reg_address),
 	.data_in(custom_data_in),
 	.data_out(user_data_out),
@@ -590,9 +600,11 @@ userio USERIO1
 	.ps2mclk(msclk),
 	._fire0(_fire0),
 	._fire1(_fire1),
+  ._fire0_dat(_fire0_dat),
+  ._fire1_dat(_fire1_dat),
   .aflock(aflock),
 	._joy1(_joy1),
-	._joy2(_joy2 & kb_joy2),
+	._joy2(_joy2 & {2'b11,kb_joy2}),
   .mouse_btn(mouse_btn),
   ._lmb(kb_lmb & mouse_btn1),
   ._rmb(kb_rmb & mouse_btn2),
@@ -672,7 +684,8 @@ denise DENISE1
 amber AMBER1
 (		
 	.clk(clk),
-	.dblscan(_15khz),
+	.dblscan(_15khz && !varbeamen),
+  .varbeamen(varbeamen),
 	.lr_filter(lr_filter),
 	.hr_filter(hr_filter),
 	.scanline(scanline),
@@ -711,7 +724,7 @@ ciaa CIAA1
 	.eclk(eclk[8]),
 	.irq(int2),
 	.porta_in({_fire1,_fire0,_ready,_track0,_wprot,_change}),
-	.porta_out({_led,ovl}),
+	.porta_out({_fire1_dat,_fire0_dat,_led,ovl}),
 	.kbdrst(kbdrst),
 	.kbddat(kbddat),
 	.kbdclk(kbdclk),
@@ -727,7 +740,8 @@ ciaa CIAA1
   .aflock(aflock),
 	.freeze(freeze),
 	.disk_led(disk_led),
-  .mou_emu (mou_emu)
+  .mou_emu (mou_emu),
+  .hrtmon_en (memory_config[6])
 );
 
 //instantiate cia B
@@ -943,7 +957,7 @@ minimig_syscontrol CONTROL1
 	.clk(clk),
   .clk7_en (clk7_en),
 	.cnt(sof),
-	.mrst(kbdrst | usrrst | rst_ext),
+	.mrst(kbdrst | usrrst | rst_ext | ~_cpu_reset_in),
 	.reset(reset)
 );
 
