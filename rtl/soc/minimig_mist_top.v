@@ -322,7 +322,7 @@ TG68K tg68k (
   .fromram      (tg68_cout        ),
   .ramready     (tg68_cpuena      ),
   .cpu          (cpu_config[1:0]  ),
-  .turbochipram (turbochipram     ),
+  .turbochipram ({cpu_config[2], turbochipram}     ),
   .turbokick    (turbokick        ),
   .cache_inhibit(cache_inhibit    ),
   .fastramcfg   ({&memcfg[5:4],memcfg[5:4]}),

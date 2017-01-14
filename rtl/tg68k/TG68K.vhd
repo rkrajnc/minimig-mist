@@ -58,7 +58,7 @@ entity TG68K is
     sel_eth       : buffer  std_logic;
     frometh       : in      std_logic_vector(15 downto 0);
     ethready      : in      std_logic;
-    turbochipram  : in      std_logic;
+    turbochipram  : in      std_logic_vector(1 downto 0);
     turbokick     : in      std_logic;
     cache_inhibit : out     std_logic;
     ovr           : in      std_logic;
@@ -141,6 +141,7 @@ SIGNAL autoconfig_data2 : std_logic_vector(3 downto 0); -- Zorro III RAM
 SIGNAL autoconfig_data3 : std_logic_vector(3 downto 0); -- Zorro III ethernet
 SIGNAL sel_fast         : std_logic;
 SIGNAL sel_chipram      : std_logic;
+SIGNAL turbochipram_cnt : std_logic_vector(1 downto 0);
 SIGNAL turbochip_ena    : std_logic := '0';
 SIGNAL turbochip_d      : std_logic := '0';
 SIGNAL turbokick_d      : std_logic := '0';
@@ -336,15 +337,29 @@ pf68K_Kernel_inst: TG68KdotC_Kernel
 --  END IF;
 --END PROCESS;
 
+PROCESS(clk) BEGIN
+  IF rising_edge(clk) THEN
+    IF turbochipram(0) = '1' THEN
+      turbochipram_cnt <= "10";
+    ELSIF turbochipram_cnt /= "00" THEN
+      turbochipram_cnt <= turbochipram_cnt - 1;
+    END IF;
+  END IF;
+END PROCESS;
 
-PROCESS(clk,turbochipram, turbokick) BEGIN
+PROCESS(clk,turbochipram(1), turbokick) BEGIN
   IF rising_edge(clk) THEN
     IF reset='0' THEN
       turbochip_d <= '0';
       turbokick_d <= '0';
     ELSIF state="01" THEN -- No mem access, so safe to switch chipram access mode
-      turbochip_d<=turbochipram;
-      turbokick_d<=turbokick;
+--      IF turbochipram(1)='1' OR turbochipram_cnt/="00" THEN
+--        turbochip_d <= '1';
+--      ELSE
+--        turbochip_d <= '0';
+--      END IF;
+      turbochip_d <= turbochipram(0);
+      turbokick_d <= turbokick;
     END IF;
   END IF;
 END PROCESS;
