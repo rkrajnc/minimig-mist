@@ -92,7 +92,7 @@ wire [7:0] pr = (pr_8[17:8] < 16) ? 8'd16 : (pr_8[17:8] > 240) ? 8'd240 : pr_8[1
 assign VGA_R  = ypbpr ? (ypbpr_full ? yuv_full[pr-8'd16] : pr[7:2]) :   red[7:2];
 assign VGA_G  = ypbpr ? (ypbpr_full ? yuv_full[y -8'd16] :  y[7:2]) : green[7:2];
 assign VGA_B  = ypbpr ? (ypbpr_full ? yuv_full[pb-8'd16] : pb[7:2]) :  blue[7:2];
-assign VGA_VS = (scandoubler_disable | ypbpr) ? 1'b1 : ~vsync_p;
-assign VGA_HS = scandoubler_disable ? ~(hsync_i ^ vsync_i) : ypbpr ? ~(hsync_p ^ vsync_p) : ~hsync_p;
+assign VGA_VS = (scandoubler_disable | ypbpr) ? 1'b1 : vsync_p;
+assign VGA_HS = scandoubler_disable ? ~(~hsync_i ^ ~vsync_i) : ypbpr ? ~(~hsync_p ^ ~vsync_p) : hsync_p;
 
 endmodule
