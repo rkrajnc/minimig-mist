@@ -34,6 +34,7 @@ module denise_bitplane_shifter
   input  wire           hires,    // high resolution select
   input  wire           shres,    // super high resolution select (takes priority over hires)
   input  wire [  2-1:0] fmode,    // AGA fetch mode
+  input  wire           aga,      // AGA enabled
   input  wire [ 64-1:0] data_in,  // parallel load data input
   input  wire [  8-1:0] scroll,   // scrolling value
   output wire           out       // shift register output
@@ -105,14 +106,14 @@ end
 assign scroller_out = scroller[select];
 
 
-// superhires scroller control // TODO test if this is correct
+// superhires scroller control
 always @ (*) begin
   if (shres) begin
-    sh_select = 3'b011;
+    sh_select = aga ? 3'b110 : 3'b011;
   end else if (hires) begin
-    sh_select = {1'b1, scroll[0], 1'b1}; // MSB bit should probably be 0, this is a hack for kickstart screen ...
+    sh_select = {aga, scroll[0], 1'b1};
   end else begin
-    sh_select = {1'b0, scroll[1:0]};
+    sh_select = {aga, scroll[1:0]};
   end
 end
 
