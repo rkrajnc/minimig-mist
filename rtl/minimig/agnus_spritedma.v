@@ -241,7 +241,7 @@ assign dmastate = dmastate_mem[sprsel];
 always @ (*) begin
   if (vbl || ({ecs&vstop[9],vstop[8:0]}==vpos[9:0]))
     dmastate_in = 0;
-  else if ( ({ecs&vstart[9],vstart[8:0]}==vpos[9:0]) && ((fmode[15] && spr_sscan2) ? (vpos[0] == vstart[0]) : 1'b1) ) // TODO fix needed!
+  else if ({ecs&vstart[9],vstart[8:0]}==vpos[9:0])
     dmastate_in = 1;
   else
     dmastate_in = dmastate;
@@ -249,15 +249,12 @@ end
 
 always @ (posedge clk) begin
   if (sprite==sprsel && hpos[2:1]==2'b01)
-    sprdmastate <= #1 dmastate;
+    sprdmastate <= #1 dmastate  & ~(fmode[15] && spr_sscan2 && (vpos[0] != vstart[0]));
 end
 
 always @ (posedge clk) begin
   if (sprite==sprsel && hpos[2:1]==2'b01)
-    if ({ecs&vstop[9],vstop[8:0]}==vpos[9:0])
-      sprvstop <= #1 1'b1;
-    else
-      sprvstop <= #1 1'b0;
+    sprvstop <= #1 ({ecs&vstop[9],vstop[8:0]}==vpos[9:0]);
 end
 
 //--------------------------------------------------------------------------------------
