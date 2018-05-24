@@ -132,6 +132,12 @@ reg   [1:0] autofire_cnt;
 wire  cd32pad;
 reg   autofire;
 reg   sel_autofire;     // select autofire and permanent fire
+wire  joy2_pin5;
+wire  joy1_pin5;
+wire cd32pad1_reg_load;
+wire cd32pad1_reg_shift;
+wire cd32pad2_reg_load;
+wire cd32pad2_reg_shift;
 
 
 //--------------------------------------------------------------------------------------
@@ -147,6 +153,9 @@ always @ (posedge clk) begin
   end
 end
 
+assign joy2_pin5 = ~(potreg[13] & ~potreg[12]);
+assign joy1_pin5 = ~(potreg[9]  & ~potreg[8]);
+
 // potcap reg
 reg  [4-1:0] potcap;
 always @ (posedge clk) begin
@@ -154,21 +163,18 @@ always @ (posedge clk) begin
     if (reset)
       potcap <= #1 4'h0;
     else begin
-      if (cd32pad && (potreg[15] && !potreg[14])) begin
+      if (cd32pad && ~joy2_pin5) begin
         potcap[3] <= #1 cd32pad2_reg[7];
       end else begin
-        if (!_sjoy2[5]) potcap[3] <= #1 1'b0;
-        else if (potreg[15] & potreg[14]) potcap[3] <= #1 1'b1;
+        potcap[3] <= #1 _djoy2[5] & ~(potreg[15] & ~potreg[14]);
       end
-      if (potreg[13]) potcap[2] <= #1 potreg[12];
-      if (cd32pad && (potreg[11] && !potreg[10])) begin
+      potcap[2] <= #1 joy2_pin5;
+      if(joy1enable & cd32pad & ~joy1_pin5) begin
         potcap[1] <= #1 cd32pad1_reg[7];
       end else begin
-        if (!(_mright&_djoy1[5]&_rmb)) potcap[1] <= #1 1'b0;
-        else if (potreg[11] & potreg[10]) potcap[1] <= #1 1'b1;
+        potcap[1] <= #1 _mright & _rmb & _djoy1[5] & ~(potreg[11] & ~potreg[10]);
       end
-      if (!_mthird) potcap[0] <= #1 1'b0;
-      else if (potreg[ 9] & potreg[ 8]) potcap[0] <= #1 1'b1;
+      potcap[0] <= #1 _mthird & joy1_pin5;
     end
   end
 end
@@ -183,8 +189,9 @@ always @ (posedge clk) begin
       fire1_d <= #1 _fire0_dat;
   end
 end
-wire cd32pad1_reg_load  = !(potreg[9] && !potreg[8]);
-wire cd32pad1_reg_shift = _fire0_dat && !fire1_d;
+
+assign cd32pad1_reg_load = joy1_pin5;
+assign cd32pad1_reg_shift = _fire0_dat && !fire1_d;
 reg [8-1:0] cd32pad1_reg;
 always @ (posedge clk) begin
   if (clk7_en) begin
@@ -207,8 +214,9 @@ always @ (posedge clk) begin
       fire2_d <= #1 _fire1_dat;
   end
 end
-wire cd32pad2_reg_load  = !(potreg[13] && !potreg[12]);
-wire cd32pad2_reg_shift = _fire1_dat && !fire2_d;
+
+assign cd32pad2_reg_load  = joy2_pin5;
+assign cd32pad2_reg_shift = _fire1_dat && !fire2_d;
 reg [8-1:0] cd32pad2_reg;
 always @ (posedge clk) begin
   if (clk7_en) begin
@@ -321,9 +329,9 @@ always @ (posedge clk) begin
     if (test_load)
       dmouse0dat[7:0] <= #1 8'h00;
     else if ((!_djoy1[0] && _sjoy1[0] && _sjoy1[2]) || (_djoy1[0] && !_sjoy1[0] && !_sjoy1[2]) || (!_djoy1[2] && _sjoy1[2] && !_sjoy1[0]) || (_djoy1[2] && !_sjoy1[2] && _sjoy1[0]))
-      dmouse0dat[7:0] <= #1 dmouse0dat[7:0] + 1;
+      dmouse0dat[7:0] <= #1 dmouse0dat[7:0] + 1'd1;
     else if ((!_djoy1[0] && _sjoy1[0] && !_sjoy1[2]) || (_djoy1[0] && !_sjoy1[0] && _sjoy1[2]) || (!_djoy1[2] && _sjoy1[2] && _sjoy1[0]) || (_djoy1[2] && !_sjoy1[2] && !_sjoy1[0]))
-      dmouse0dat[7:0] <= #1 dmouse0dat[7:0] - 1;
+      dmouse0dat[7:0] <= #1 dmouse0dat[7:0] - 1'd1;
     else
       dmouse0dat[1:0] <= #1 {!_djoy1[0], _djoy1[0] ^ _djoy1[2]};
   end
@@ -334,9 +342,9 @@ always @ (posedge clk) begin
     if (test_load)
       dmouse0dat[15:8] <= #1 8'h00;
     else if ((!_djoy1[1] && _sjoy1[1] && _sjoy1[3]) || (_djoy1[1] && !_sjoy1[1] && !_sjoy1[3]) || (!_djoy1[3] && _sjoy1[3] && !_sjoy1[1]) || (_djoy1[3] && !_sjoy1[3] && _sjoy1[1]))
-      dmouse0dat[15:8] <= #1 dmouse0dat[15:8] + 1;
+      dmouse0dat[15:8] <= #1 dmouse0dat[15:8] + 1'd1;
     else if ((!_djoy1[1] && _sjoy1[1] && !_sjoy1[3]) || (_djoy1[1] && !_sjoy1[1] && _sjoy1[3]) || (!_djoy1[3] && _sjoy1[3] && _sjoy1[1]) || (_djoy1[3] && !_sjoy1[3] && !_sjoy1[1]))
-      dmouse0dat[15:8] <= #1 dmouse0dat[15:8] - 1;
+      dmouse0dat[15:8] <= #1 dmouse0dat[15:8] - 1'd1;
     else
       dmouse0dat[9:8] <= #1 {!_djoy1[1], _djoy1[1] ^ _djoy1[3]};
   end
@@ -348,9 +356,9 @@ always @ (posedge clk) begin
     if (test_load)
       dmouse1dat[7:2] <= #1 test_data[7:2];
     else if ((!_djoy2[0] && _tjoy2[0] && _tjoy2[2]) || (_djoy2[0] && !_tjoy2[0] && !_tjoy2[2]) || (!_djoy2[2] && _tjoy2[2] && !_tjoy2[0]) || (_djoy2[2] && !_tjoy2[2] && _tjoy2[0]))
-      dmouse1dat[7:0] <= #1 dmouse1dat[7:0] + 1;
+      dmouse1dat[7:0] <= #1 dmouse1dat[7:0] + 1'd1;
     else if ((!_djoy2[0] && _tjoy2[0] && !_tjoy2[2]) || (_djoy2[0] && !_tjoy2[0] && _tjoy2[2]) || (!_djoy2[2] && _tjoy2[2] && _tjoy2[0]) || (_djoy2[2] && !_tjoy2[2] && !_tjoy2[0]))
-      dmouse1dat[7:0] <= #1 dmouse1dat[7:0] - 1;
+      dmouse1dat[7:0] <= #1 dmouse1dat[7:0] - 1'd1;
     else
       dmouse1dat[1:0] <= #1 {!_djoy2[0], _djoy2[0] ^ _djoy2[2]};
   end
@@ -361,9 +369,9 @@ always @ (posedge clk) begin
     if (test_load)
       dmouse1dat[15:10] <= #1 test_data[15:10];
     else if ((!_djoy2[1] && _tjoy2[1] && _tjoy2[3]) || (_djoy2[1] && !_tjoy2[1] && !_tjoy2[3]) || (!_djoy2[3] && _tjoy2[3] && !_tjoy2[1]) || (_djoy2[3] && !_tjoy2[3] && _tjoy2[1]))
-      dmouse1dat[15:8] <= #1 dmouse1dat[15:8] + 1;
+      dmouse1dat[15:8] <= #1 dmouse1dat[15:8] + 1'd1;
     else if ((!_djoy2[1] && _tjoy2[1] && !_tjoy2[3]) || (_djoy2[1] && !_tjoy2[1] && _tjoy2[3]) || (!_djoy2[3] && _tjoy2[3] && _tjoy2[1]) || (_djoy2[3] && !_tjoy2[3] && !_tjoy2[1]))
-      dmouse1dat[15:8] <= #1 dmouse1dat[15:8] - 1;
+      dmouse1dat[15:8] <= #1 dmouse1dat[15:8] - 1'd1;
     else
       dmouse1dat[9:8] <= #1 {!_djoy2[1], _djoy2[1] ^ _djoy2[3]};
   end
