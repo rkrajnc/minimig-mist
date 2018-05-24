@@ -9,8 +9,12 @@ AR - A.M. Robinson
 TH - Till Harbaum
 RK - Rok Krajnc
 MJ - Mike Johnson
+AM - Alexey Melnikov
 
 
+2018-05-24 - AM - AGNUS        - doublescan sprites fix
+2018-05-24 - AM - DENISE       - bitplanes 1-pixel shift fix
+2018-05-24 - AM - USERIO       - CD32 fix
 2016-02-20 - RK - MINIMIG      - initial implementation of programmable display modes
 2016-02-16 - RK - MINIMIG      - OSD HRTmon enable / disable switch is working (ON - F11 acts as NMI and enters HRTmon, OFF - F11 is HELP key)
 2016-02-15 - RK - MINIMIG      - proper handling of CPU access to chipRAM & custom regs - CPU waits for free slot when turbo option is disabled
