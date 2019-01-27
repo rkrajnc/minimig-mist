@@ -43,7 +43,7 @@ set_global_assignment -name GENERATE_RBF_FILE ON
 set_global_assignment -name FORCE_CONFIGURATION_VCCIO ON
 set_global_assignment -name STRATIX_DEVICE_IO_STANDARD "3.3-V LVTTL"
 
-set_global_assignment -name CYCLONEII_OPTIMIZATION_TECHNIQUE BALANCED
+set_global_assignment -name CYCLONEII_OPTIMIZATION_TECHNIQUE SPEED
 set_global_assignment -name SMART_RECOMPILE ON
 set_global_assignment -name ENABLE_SIGNALTAP OFF
 set_global_assignment -name USE_SIGNALTAP_FILE cpu_nmi.stp
