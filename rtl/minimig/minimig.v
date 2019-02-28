@@ -377,10 +377,10 @@ wire	hires;					//hires signal from Denise for interpolation filter enable in Am
 wire	aron;					//Action Replay is enabled
 wire	cpu_speed;				//requests CPU to switch speed mode
 wire	turbo;					//CPU is working in turbo mode
-wire	[6:0] memory_config;	//memory configuration
-wire	[3:0] floppy_config;	//floppy drives configuration (drive number and speed)
-wire	[4:0] chipset_config;	//chipset features selection
-wire	[2:0] ide_config;		//HDD & HDC config: bit #0 enables Gayle, bit #1 enables Master drive, bit #2 enables Slave drive
+reg		[6:0] memory_config;	//memory configuration
+reg		[3:0] floppy_config;	//floppy drives configuration (drive number and speed)
+reg		[4:0] chipset_config;	//chipset features selection
+reg		[2:0] ide_config;		//HDD & HDC config: bit #0 enables Gayle, bit #1 enables Master drive, bit #2 enables Slave drive
 
 //gayle stuff
 wire	sel_ide;				//select IDE drive registers
@@ -582,6 +582,23 @@ paula PAULA1
   .floppy_frd (floppy_frd)
 );
 
+wire	[6:0] userio_memory_config;	//memory configuration
+wire	[3:0] userio_floppy_config;	//floppy drives configuration (drive number and speed)
+wire	[4:0] userio_chipset_config;	//chipset features selection
+wire	[2:0] userio_ide_config;		//HDD & HDC config: bit #0 enables Gayle, bit #1 enables Master drive, bit #2 enables Slave drive
+wire    [3:0] userio_cpu_config;
+reg     [3:0] cpu_config_reg;
+
+assign cpu_config = cpu_config_reg;
+
+always @(posedge clk) begin
+	memory_config <= userio_memory_config;
+	floppy_config <= userio_floppy_config;
+	chipset_config <= userio_chipset_config;
+	ide_config <= userio_ide_config;
+	cpu_config_reg <= userio_cpu_config;
+end
+
 //instantiate user IO
 userio USERIO1 
 (	
@@ -624,13 +641,13 @@ userio USERIO1
 	.osd_pixel(osd_pixel),
 	.lr_filter(lr_filter),
 	.hr_filter(hr_filter),
-	.memory_config(memory_config),
-	.chipset_config(chipset_config),
-	.floppy_config(floppy_config),
+	.memory_config(userio_memory_config),
+	.chipset_config(userio_chipset_config),
+	.floppy_config(userio_floppy_config),
 	.scanline(scanline),
   .dither(dither),
-	.ide_config(ide_config),
-  .cpu_config(cpu_config),
+	.ide_config(userio_ide_config),
+	.cpu_config(userio_cpu_config),
 	.usrrst(usrrst),
   .cpurst(cpurst),
   .cpuhlt(cpuhlt),

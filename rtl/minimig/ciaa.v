@@ -216,81 +216,8 @@ always @(posedge clk)
   end
 
 `else
+//MiST kbd
 
-//`define NEW_KEYB
-`ifdef NEW_KEYB
-// MiST keyboard
-reg  [ 2:0] kms_level_sync;
-wire        kms;
-reg  [ 7:0] kmd_sync[0:1];
-wire [ 7:0] kmd;
-reg  [ 1:0] kmt_sync[0:1];
-wire [ 1:0] kmt;
-reg  [ 7:0] osd_ctrl_reg;
-reg         freeze_reg=0;
-
-// sync kms_level to clk28
-always @ (posedge clk) begin
-  if (clk7_en) begin
-    kms_level_sync <= #1 {kms_level_sync[1:0], kms_level};
-  end
-end
-
-//recreate kbd_mouse strobe in clk28 domain
-assign kms = kms_level_sync[2] ^ kms_level_sync[1];
-
-// synced data
-assign kmt = kmt_sync[1];
-assign kmd = kmd_sync[1];
-
-// sync kbd_mouse_data to clk28
-always @ (posedge clk) begin
-  if (clk7_en) begin
-    kmd_sync[0] <= #1 kbd_mouse_data;
-    kmd_sync[1] <= #1 kmd_sync[0];
-    kmt_sync[0] <= #1 kbd_mouse_type;
-    kmt_sync[1] <= #1 kmt_sync[0];
-  end
-end
-
-// sdr register
-// !!! Amiga receives keycode ONE STEP ROTATED TO THE RIGHT AND INVERTED !!!
-always @ (posedge clk) begin
-  if (clk7_en) begin
-    if (reset) begin
-      sdr_latch[7:0] <= 8'h00;
-      freeze_reg <= #1 1'b0;
-    end else if (kms && (kmt == 2) && ~keyboard_disabled) begin
-      sdr_latch[7:0] <= ~{kmd[6:0],kmd[7]};
-      if (hrtmon_en && (kmd == 8'h5f)) freeze_reg <= #1 1'b1;
-      else freeze_reg <= #1 1'b0;
-    end else if (wr & sdr) begin
-        sdr_latch[7:0] <= data_in[7:0];
-    end
-  end
-end
-
-always @ (posedge clk) begin
-  if (clk7_en) begin
-    if (reset)
-      osd_ctrl_reg[7:0] <= 8'd0;
-    else if (kms && ((kmt == 2) || (kmt == 3)))
-      osd_ctrl_reg[7:0] <= kbd_mouse_data;
-  end
-end
-
-assign kbdrst = 1'b0;
-assign _lmb = 1'b1;
-assign _rmb = 1'b1;
-assign _joy2 = 6'b11_1111;
-assign joy_emu = 6'b11_1111;
-assign mou_emu = 6'b11_1111;
-assign freeze = freeze_reg;
-assign aflock = 1'b0;
-assign keystrobe = kms && ((kmt == 2));
-assign osd_ctrl = osd_ctrl_reg;
-
-`else
 assign kbdrst = 1'b0;
 assign _lmb = 1'b1;
 assign _rmb = 1'b1;
@@ -308,18 +235,13 @@ assign keystrobe = keystrobe_reg && ((kbd_mouse_type == 2) || (kbd_mouse_type ==
 
 assign osd_ctrl = osd_ctrl_reg;
 
-// generate a keystrobe which is valid exactly one clk cycle
-reg kbd_mouse_strobeD, kbd_mouse_strobeD2;
-always @(posedge clk)
-  if (clk7_en) begin
-    kbd_mouse_strobeD <= kbd_mouse_strobe;
-  end
-
+reg kms_levelD;
 always @(posedge clk) begin
-  if (clk7n_en) begin
-    kbd_mouse_strobeD2 <= kbd_mouse_strobeD;
-    keystrobe_reg <= kbd_mouse_strobeD && !kbd_mouse_strobeD2;
-  end
+	if (clk7n_en) begin
+		keystrobe_reg <= 0;
+		kms_levelD <= kms_level;
+		if (kms_level ^ kms_levelD)	keystrobe_reg <= 1;
+	end
 end
 
 // sdr register
@@ -343,8 +265,6 @@ always @(posedge clk) begin
     end
   end
 end
-
-`endif
 
 `endif
 
