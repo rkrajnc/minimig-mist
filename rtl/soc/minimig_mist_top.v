@@ -503,6 +503,7 @@ assign SPI_DO = (CONF_DATA0 == 1'b0)?user_io_sdo:
 
 //// user io has an extra spi channel outside minimig core ////
 user_io user_io(
+     .clk_sys(clk_28),
      .SPI_CLK(SPI_SCK),
      .SPI_SS_IO(CONF_DATA0),
      .SPI_MISO(user_io_sdo),

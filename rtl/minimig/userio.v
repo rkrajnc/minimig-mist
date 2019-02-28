@@ -438,28 +438,8 @@ userio_ps2mouse pm1
 `else
 
 //// MiST mouse ////
-reg  [ 2:0] kms_level_sync;
-wire        kms;
-reg  [ 7:0] kmd_sync[0:1];
-reg  [ 1:0] kmt_sync[0:1];
 reg  [ 7:0] xcount;
 reg  [ 7:0] ycount;
-
-// sync kms_level to clk28
-always @ (posedge clk) begin
-  kms_level_sync <= #1 {kms_level_sync[1:0], kms_level};
-end
-
-//recreate kbd_mouse strobe in clk28 domain
-assign kms = kms_level_sync[2] ^ kms_level_sync[1];
-
-// sync kbd_mouse_data to clk28
-always @ (posedge clk) begin
-  kmd_sync[0] <= #1 kbd_mouse_data;
-  kmd_sync[1] <= #1 kmd_sync[0];
-  kmt_sync[0] <= #1 kbd_mouse_type;
-  kmt_sync[1] <= #1 kmt_sync[0];
-end
 
 // mouse counters
 always @(posedge clk) begin
@@ -469,11 +449,11 @@ always @(posedge clk) begin
   end else if (test_load && clk7_en) begin
     ycount[7:2] <= #1 test_data[15:10];
     xcount[7:2] <= #1 test_data[7:2];
-  end else if (kms) begin
-    if(kmt_sync[1] == 0)
-      xcount[7:0] <= #1 xcount[7:0] + kmd_sync[1];
-    else if(kmt_sync[1] == 1)
-      ycount[7:0] <= #1 ycount[7:0] + kmd_sync[1];
+  end else if (kbd_mouse_strobe) begin
+    if(kbd_mouse_type == 2'b00)
+      xcount[7:0] <= #1 xcount[7:0] + kbd_mouse_data;
+    else if(kbd_mouse_type == 2'b01)
+      ycount[7:0] <= #1 ycount[7:0] + kbd_mouse_data;
   end
 end
 

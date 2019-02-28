@@ -4,8 +4,8 @@ set_time_format -unit ns -decimal_places 3
 
 
 #create clocks
-create_clock -name pll_in_clk -period 37.037  [get_ports {CLOCK_27[0]}]
-create_clock -name spi_clk    -period 40.000  [get_ports {SPI_SCK}]
+create_clock -name pll_in_clk -period 37.037 [get_ports {CLOCK_27[0]}]
+create_clock -name spi_clk -period 41.666 -waveform { 20.8 41.666 } [get_ports {SPI_SCK}]
 
 # pll clocks
 derive_pll_clocks
@@ -35,14 +35,16 @@ derive_clock_uncertainty
 
 
 # input delay
-set_input_delay -clock $clk_sdram -max 6.4 $sdram_inputs
-set_input_delay -clock $clk_sdram -min 3.2 $sdram_inputs
+set_input_delay -clock $clk_114 -max 6.4 $sdram_inputs
+set_input_delay -clock $clk_114 -min 3.2 $sdram_inputs
 #set_input_delay -clock $clk_sdram -max 6.5 $sdram_inputs
 #set_input_delay -clock $clk_sdram -min 2.7 $sdram_inputs
 
 #output delay
-set_output_delay -clock $clk_sdram -max  1.5 $sdram_outputs
-set_output_delay -clock $clk_sdram -min -0.8 $sdram_outputs
+set_output_delay -clock $clk_sdram -max  1.5 [get_ports SDRAM_CLK]
+set_output_delay -clock $clk_sdram -min -0.8 [get_ports SDRAM_CLK]
+set_output_delay -clock $clk_114 -max  1.5 $sdram_outputs
+set_output_delay -clock $clk_114 -min -0.8 $sdram_outputs
 
 
 # false paths
@@ -55,13 +57,21 @@ set_false_path -from * -to [get_ports {AUDIO_R}]
 
 
 # multicycle paths
-set_multicycle_path 4 -to [get_fanouts [get_pins {amiga_clk|clk7_en_reg|q*}]  -through [get_pins -hierarchical *|*ena*]] -end -setup
-set_multicycle_path 3 -to [get_fanouts [get_pins {amiga_clk|clk7_en_reg|q*}]  -through [get_pins -hierarchical *|*ena*]] -end -hold
-set_multicycle_path 4 -to [get_fanouts [get_pins {amiga_clk|clk7n_en_reg|q*}] -through [get_pins -hierarchical *|*ena*]] -end -setup
-set_multicycle_path 3 -to [get_fanouts [get_pins {amiga_clk|clk7n_en_reg|q*}] -through [get_pins -hierarchical *|*ena*]] -end -hold
-set_multicycle_path 2 -to $clk_114 -from $clk_sdram -end -setup
+#set_multicycle_path 4 -to [get_fanouts [get_pins {amiga_clk|clk7_en_reg|q*}]  -through [get_pins -hierarchical *|*ena*]] -end -setup
+#set_multicycle_path 3 -to [get_fanouts [get_pins {amiga_clk|clk7_en_reg|q*}]  -through [get_pins -hierarchical *|*ena*]] -end -hold
+#set_multicycle_path 4 -to [get_fanouts [get_pins {amiga_clk|clk7n_en_reg|q*}] -through [get_pins -hierarchical *|*ena*]] -end -setup
+#set_multicycle_path 3 -to [get_fanouts [get_pins {amiga_clk|clk7n_en_reg|q*}] -through [get_pins -hierarchical *|*ena*]] -end -hold
+#set_multicycle_path 2 -to $clk_114 -from $clk_sdram -end -setup
 #set_multicycle_path 1 -to $clk_114 -from $clk_sdram -end -hold
 
+set_multicycle_path -from {TG68K:tg68k|TG68KdotC_Kernel:pf68K_Kernel_inst|*} -setup 4
+set_multicycle_path -from {TG68K:tg68k|TG68KdotC_Kernel:pf68K_Kernel_inst|*} -hold 3
+
+set_multicycle_path -from [get_clocks {amiga_clk|amiga_clk_i|altpll_component|auto_generated|pll1|clk[2]}] -to [get_clocks {amiga_clk|amiga_clk_i|altpll_component|auto_generated|pll1|clk[1]}] -setup 4
+set_multicycle_path -from [get_clocks {amiga_clk|amiga_clk_i|altpll_component|auto_generated|pll1|clk[2]}] -to [get_clocks {amiga_clk|amiga_clk_i|altpll_component|auto_generated|pll1|clk[1]}] -hold 3
+
+set_multicycle_path -from [get_clocks {clk_7}] -to [get_clocks {amiga_clk|amiga_clk_i|altpll_component|auto_generated|pll1|clk[1]}] -setup 4
+set_multicycle_path -from [get_clocks {clk_7}] -to [get_clocks {amiga_clk|amiga_clk_i|altpll_component|auto_generated|pll1|clk[1]}] -hold 3
 
 # JTAG
 set ports [get_ports -nowarn {altera_reserved_tck}]
