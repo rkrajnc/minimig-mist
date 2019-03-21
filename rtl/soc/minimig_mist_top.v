@@ -70,7 +70,6 @@ wire           clk_114;
 wire           clk_28;
 wire           clk_sdram;
 wire           pll_locked;
-wire           clk_7;
 wire           clk7_en;
 wire           clk7n_en;
 wire           c1;
@@ -246,7 +245,6 @@ amiga_clk amiga_clk (
   .clk_114      (clk_114          ), // output clock c0 (114.750000MHz)
   .clk_sdram    (clk_sdram        ), // output clock c2 (114.750000MHz, -146.25 deg)
   .clk_28       (clk_28           ), // output clock c1 ( 28.687500MHz)
-  .clk_7        (clk_7            ), // output clock 7  (  7.171875MHz)
   .clk7_en      (clk7_en          ), // output clock 7 enable (on 28MHz clock domain)
   .clk7n_en     (clk7n_en         ), // 7MHz negedge output clock enable (on 28MHz clock domain)
   .c1           (c1               ), // clk28m clock domain signal synchronous with clk signal
@@ -372,7 +370,6 @@ TG68 tg68 (
 sdram_ctrl sdram (
   // sys
   .sysclk       (clk_114          ),
-  .c_7m         (clk_7            ),
   .reset_in     (sdctl_rst        ),
   .cache_rst    (tg68_rst         ),
   .reset_out    (reset_out        ),
@@ -450,7 +447,7 @@ sdram_ctrl sdram (
   .chipL        (_ram_ble         ),
   .chipRW       (_ram_we          ),
   .chip_dma     (_ram_oe          ),
-  .c_7m         (clk_7            ),
+  .clk7_en      (clk7_en          ),
   .hostRD       (                 ),
   .hostena      (                 ),
   .cpuRD        (tg68_cout        ),

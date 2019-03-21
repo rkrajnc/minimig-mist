@@ -12,7 +12,6 @@ derive_pll_clocks
 
 
 # generated clocks
-create_generated_clock -name clk_7 -source [get_pins {amiga_clk|amiga_clk_i|altpll_component|auto_generated|pll1|clk[2]}] -divide_by 4 [get_pins {amiga_clk|clk7_cnt[1]|q}]
 
 
 # name PLL clocks
@@ -69,9 +68,6 @@ set_multicycle_path -from {TG68K:tg68k|TG68KdotC_Kernel:pf68K_Kernel_inst|*} -ho
 
 set_multicycle_path -from [get_clocks {amiga_clk|amiga_clk_i|altpll_component|auto_generated|pll1|clk[2]}] -to [get_clocks {amiga_clk|amiga_clk_i|altpll_component|auto_generated|pll1|clk[1]}] -setup 4
 set_multicycle_path -from [get_clocks {amiga_clk|amiga_clk_i|altpll_component|auto_generated|pll1|clk[2]}] -to [get_clocks {amiga_clk|amiga_clk_i|altpll_component|auto_generated|pll1|clk[1]}] -hold 3
-
-set_multicycle_path -from [get_clocks {clk_7}] -to [get_clocks {amiga_clk|amiga_clk_i|altpll_component|auto_generated|pll1|clk[1]}] -setup 4
-set_multicycle_path -from [get_clocks {clk_7}] -to [get_clocks {amiga_clk|amiga_clk_i|altpll_component|auto_generated|pll1|clk[1]}] -hold 3
 
 # JTAG
 set ports [get_ports -nowarn {altera_reserved_tck}]

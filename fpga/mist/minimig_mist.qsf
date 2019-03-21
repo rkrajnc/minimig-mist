@@ -174,7 +174,6 @@ set_instance_assignment -name GLOBAL_SIGNAL OFF -to "amigaclk:amigaclk|altpll:al
 set_instance_assignment -name GLOBAL_SIGNAL "GLOBAL CLOCK" -to "amigaclk:amigaclk|altpll:altpll_component|_clk1"
 set_instance_assignment -name GLOBAL_SIGNAL "GLOBAL CLOCK" -to "amigaclk:amigaclk|altpll:altpll_component|_clk2"
 set_instance_assignment -name GLOBAL_SIGNAL "GLOBAL CLOCK" -to SPI_SCK
-set_instance_assignment -name GLOBAL_SIGNAL "GLOBAL CLOCK" -to clk7_cnt[1]
 
 
 set_instance_assignment -name FAST_OUTPUT_REGISTER ON -to SDRAM_DQ[0]
