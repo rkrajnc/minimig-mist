@@ -266,8 +266,8 @@ always @ (posedge clk) begin
   if (clk7_en) begin
     _sjoy1 <= #1 _joy1;
     _djoy1 <= #1 _sjoy1;
-    _tjoy2 <= #1 _joy2;
-    _djoy2 <= #1 _tjoy2;
+    _tjoy2 <= #1 joy2enable ? _joy2 : 16'hffff;
+    _djoy2 <= #1 joy2enable ? _tjoy2 : 16'hffff;
     if (sof)
       _xjoy2 <= #1 _joy2;
   end
