@@ -70,7 +70,6 @@ wire           clk_114;
 wire           clk_28;
 wire           clk_sdram;
 wire           pll_locked;
-wire           clk_7;
 wire           clk7_en;
 wire           clk7n_en;
 wire           c1;
@@ -162,25 +161,13 @@ wire [  2-1:0] sdram_ba;
 // mist
 wire           user_io_sdo;
 wire           minimig_sdo;
-wire [  8-1:0] JOYA;
-wire [  8-1:0] JOYB;
-reg  [  8-1:0] JOYA_0;
-reg  [  8-1:0] JOYB_0;
-reg  [  8-1:0] JOYA_1;
-reg  [  8-1:0] JOYB_1;
-wire [  8-1:0] joya;
-wire [  8-1:0] joyb;
+wire [  16-1:0] joya;
+wire [  16-1:0] joyb;
 wire [  8-1:0] kbd_mouse_data;
 wire           kbd_mouse_strobe;
 wire           kms_level;
 wire [  2-1:0] kbd_mouse_type;
-wire [  3-1:0] MOUSE_BUTTONS;
-reg  [  3-1:0] MOUSE_BUTTONS_0;
-reg  [  3-1:0] MOUSE_BUTTONS_1;
 wire [  3-1:0] mouse_buttons;
-wire [  4-1:0] CORE_CONFIG;
-reg  [  4-1:0] CORE_CONFIG_0;
-reg  [  4-1:0] CORE_CONFIG_1;
 wire [  4-1:0] core_config;
 
 
@@ -203,23 +190,6 @@ assign pll_in_clk       = CLOCK_27[0];
 // reset
 assign pll_rst          = 1'b0;
 assign sdctl_rst        = pll_locked;
-
-// mist
-always @ (posedge clk_28) begin
-  CORE_CONFIG_0   <= #1 CORE_CONFIG;
-  CORE_CONFIG_1   <= #1 CORE_CONFIG_0;
-  JOYA_0          <= #1 JOYA;
-  JOYB_0          <= #1 JOYB;
-  JOYA_1          <= #1 JOYA_0;
-  JOYB_1          <= #1 JOYB_0;
-  MOUSE_BUTTONS_0 <= #1 MOUSE_BUTTONS;
-  MOUSE_BUTTONS_1 <= #1 MOUSE_BUTTONS_0;
-end
-
-assign core_config      = CORE_CONFIG_1;
-assign joya             = JOYA_1;
-assign joyb             = JOYB_1;
-assign mouse_buttons    = MOUSE_BUTTONS_1;
 
 // minimig
 assign _15khz           = ~core_config[0];
@@ -275,7 +245,6 @@ amiga_clk amiga_clk (
   .clk_114      (clk_114          ), // output clock c0 (114.750000MHz)
   .clk_sdram    (clk_sdram        ), // output clock c2 (114.750000MHz, -146.25 deg)
   .clk_28       (clk_28           ), // output clock c1 ( 28.687500MHz)
-  .clk_7        (clk_7            ), // output clock 7  (  7.171875MHz)
   .clk7_en      (clk7_en          ), // output clock 7 enable (on 28MHz clock domain)
   .clk7n_en     (clk7n_en         ), // 7MHz negedge output clock enable (on 28MHz clock domain)
   .c1           (c1               ), // clk28m clock domain signal synchronous with clk signal
@@ -401,7 +370,6 @@ TG68 tg68 (
 sdram_ctrl sdram (
   // sys
   .sysclk       (clk_114          ),
-  .c_7m         (clk_7            ),
   .reset_in     (sdctl_rst        ),
   .cache_rst    (tg68_rst         ),
   .reset_out    (reset_out        ),
@@ -479,7 +447,7 @@ sdram_ctrl sdram (
   .chipL        (_ram_ble         ),
   .chipRW       (_ram_we          ),
   .chip_dma     (_ram_oe          ),
-  .c_7m         (clk_7            ),
+  .clk7_en      (clk7_en          ),
   .hostRD       (                 ),
   .hostena      (                 ),
   .cpuRD        (tg68_cout        ),
@@ -500,7 +468,6 @@ sdram_ctrl sdram (
 assign SPI_DO = (CONF_DATA0 == 1'b0)?user_io_sdo:
     (((SPI_SS2 == 1'b0)|| (SPI_SS3 == 1'b0))?minimig_sdo:1'bZ);
 
-
 //// user io has an extra spi channel outside minimig core ////
 user_io user_io(
      .clk_sys(clk_28),
@@ -508,15 +475,15 @@ user_io user_io(
      .SPI_SS_IO(CONF_DATA0),
      .SPI_MISO(user_io_sdo),
      .SPI_MOSI(SPI_DI),
-     .JOY0(JOYA),
-     .JOY1(JOYB),
-     .MOUSE_BUTTONS(MOUSE_BUTTONS),
+     .JOY0(joya),
+     .JOY1(joyb),
+     .MOUSE_BUTTONS(mouse_buttons),
      .KBD_MOUSE_DATA(kbd_mouse_data),
      .KBD_MOUSE_TYPE(kbd_mouse_type),
      .KBD_MOUSE_STROBE(kbd_mouse_strobe),
      .KMS_LEVEL(kms_level),
      .CORE_TYPE(8'ha5),    // minimig core id (a1 - old minimig id, a5 - new aga minimig id)
-     .CONF(CORE_CONFIG)
+     .CONF(core_config)
   );
 
 
@@ -561,8 +528,8 @@ minimig minimig (
   .cts          (1'b0             ),  // RS232 clear to send
   .rts          (                 ),  // RS232 request to send
   //I/O
-  ._joy1        (~joya            ),  // joystick 1 [fire4,fire3,fire2,fire,up,down,left,right] (default mouse port)
-  ._joy2        (~joyb            ),  // joystick 2 [fire4,fire3,fire2,fire,up,down,left,right] (default joystick port)
+  ._joy1        (~joya            ),  // joystick 1 [fire7:fire,up,down,left,right] (default mouse port)
+  ._joy2        (~joyb            ),  // joystick 2 [fire7:fire,up,down,left,right] (default joystick port)
   .mouse_btn1   (1'b1             ), // mouse button 1
   .mouse_btn2   (1'b1             ), // mouse button 2
   .mouse_btn    (mouse_buttons    ),  // mouse buttons

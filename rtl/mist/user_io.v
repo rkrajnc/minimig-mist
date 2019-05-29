@@ -7,8 +7,8 @@ module user_io(
 	input        SPI_MOSI,
 	input  [7:0] CORE_TYPE,
 
-	output [7:0] JOY0,
-	output [7:0] JOY1,
+	output [15:0] JOY0,
+	output [15:0] JOY1,
 
 	output [2:0] MOUSE_BUTTONS,
 	output       KBD_MOUSE_STROBE,
@@ -38,8 +38,8 @@ reg [31:0]    joystick_2;
 reg [31:0]    joystick_3;
 reg [31:0]    joystick_4;
 
-assign JOY0 = joystick_0[7:0];
-assign JOY1 = joystick_1[7:0];
+assign JOY0 = joystick_0[15:0];
+assign JOY1 = joystick_1[15:0];
 
 assign KBD_MOUSE_DATA = kbd_mouse_data; // 8 bit movement data
 assign KBD_MOUSE_TYPE = kbd_mouse_type; // 0=mouse x,1=mouse y, 2=keycode, 3=OSD kbd

@@ -8,7 +8,6 @@ module amiga_clk (
   output wire           clk_114,    // SDRAM ctrl   clock (114.750000MHz)
   output wire           clk_sdram,  // SDRAM output clock (114.750000MHz, -146.25 deg)
   output wire           clk_28,     // 28MHz output clock ( 28.375160MHz)
-  output wire           clk_7,      // 7MHz  output clock (  7.171875MHz)
   output wire           clk7_en,    // 7MHz output clock enable (on 28MHz clock domain)
   output wire           clk7n_en,   // 7MHz negedge output clock enable (on 28MHz clock domain)
   output wire           c1,         // clk28m clock domain signal synchronous with clk signal
@@ -106,7 +105,7 @@ always @ (posedge clk_28, negedge locked) begin
   end
 end
 
-assign clk_7 = clk7_cnt[1];
+wire clk_7 = clk7_cnt[1];
 assign clk7_en = clk7_en_reg;
 assign clk7n_en = clk7n_en_reg;
 
@@ -137,11 +136,13 @@ assign c1 = c1_r;
 
 // counter used to generate e clock enable
 reg [3:0] e_cnt = 4'b0000;
-always @(posedge clk_7) begin
-  if (e_cnt[3] && e_cnt[0])
-    e_cnt[3:0] <= 4'd0;
-  else
-    e_cnt[3:0] <= e_cnt[3:0] + 4'd1;
+always @(posedge clk_28) begin
+  if (clk7_cnt == 2'b01) begin
+    if (e_cnt[3] && e_cnt[0])
+      e_cnt[3:0] <= 4'd0;
+    else
+      e_cnt[3:0] <= e_cnt[3:0] + 4'd1;
+  end
 end
 
 // CCK clock output

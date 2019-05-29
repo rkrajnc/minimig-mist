@@ -187,8 +187,8 @@ module minimig
 	input	cts,				//rs232 clear to send
 	output	rts,				//rs232 request to send
 	//I/O
-	input	[7:0]_joy1,			//joystick 1 [fire2,fire,up,down,left,right] (default mouse port)
-	input	[7:0]_joy2,			//joystick 2 [fire2,fire,up,down,left,right] (default joystick port)
+	input	[15:0]_joy1,		//joystick 1 [fire7:fire,up,down,left,right] (default mouse port)
+	input	[15:0]_joy2,		//joystick 2 [fire7:fire,up,down,left,right] (default joystick port)
   input mouse_btn1, // mouse button 1
   input mouse_btn2, // mouse button 2
   input [2:0] mouse_btn, // mouse buttons
@@ -622,7 +622,7 @@ userio USERIO1
   ._fire1_dat(_fire1_dat),
   .aflock(aflock),
 	._joy1(_joy1),
-	._joy2(_joy2 & {2'b11,kb_joy2}),
+	._joy2(_joy2 & {10'b1111111111,kb_joy2}),
   .mouse_btn(mouse_btn),
   ._lmb(kb_lmb & mouse_btn1),
   ._rmb(kb_rmb & mouse_btn2),
